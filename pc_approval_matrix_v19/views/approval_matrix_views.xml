@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pc_approval_matrix_list" model="ir.ui.view">
+        <field name="name">pc.approval.matrix.list</field>
+        <field name="model">pc.approval.matrix</field>
+        <field name="arch" type="xml">
+            <list default_order="sequence,id">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="department_id"/>
+                <field name="minimum_amount"/>
+                <field name="has_maximum" optional="hide"/>
+                <field name="maximum_amount" optional="show"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_pc_approval_matrix_form" model="ir.ui.view">
+        <field name="name">pc.approval.matrix.form</field>
+        <field name="model">pc.approval.matrix</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active"/>
+                            <field name="sequence"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="department_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Base Currency Amount Range">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="minimum_amount"/>
+                            <field name="minimum_inclusive"/>
+                            <field name="has_maximum"/>
+                            <field name="maximum_amount" invisible="not has_maximum"/>
+                            <field name="maximum_inclusive" invisible="not has_maximum"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Approval Stages">
+                            <field name="stage_ids" context="{'default_matrix_id': id}">
+                                <list editable="bottom" default_order="sequence,id">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="approver_ids" widget="many2many_tags"/>
+                                    <field name="department_manager_as_approver"/>
+                                    <field name="require_all_approvers"/>
+                                    <field name="minimum_approvals" invisible="require_all_approvers"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_pc_approval_matrix_search" model="ir.ui.view">
+        <field name="name">pc.approval.matrix.search</field>
+        <field name="model">pc.approval.matrix</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_pc_approval_matrix" model="ir.actions.act_window">
+        <field name="name">Approval Matrices</field>
+        <field name="res_model">pc.approval.matrix</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_department': 1}</field>
+    </record>
+</odoo>

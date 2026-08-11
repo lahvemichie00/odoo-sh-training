@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="matrix_default_payment_request" model="pc.approval.matrix">
+        <field name="name">Default Approval - Review Before Go-Live</field>
+        <field name="sequence">999</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="minimum_amount">0</field>
+        <field name="minimum_inclusive">True</field>
+        <field name="has_maximum">False</field>
+    </record>
+
+    <record id="matrix_default_payment_request_stage" model="pc.approval.matrix.stage">
+        <field name="name">Manager Approval</field>
+        <field name="matrix_id" ref="matrix_default_payment_request"/>
+        <field name="sequence">0</field>
+        <field name="approver_ids" eval="[(6, 0, [ref('base.user_admin')])]"/>
+        <field name="require_all_approvers">True</field>
+        <field name="minimum_approvals">1</field>
+    </record>
+</odoo>

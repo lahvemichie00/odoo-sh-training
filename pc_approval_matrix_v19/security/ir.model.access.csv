@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pc_approval_matrix_user,pc.approval.matrix user,model_pc_approval_matrix,group_approval_matrix_user,1,0,0,0
+access_pc_approval_matrix_manager,pc.approval.matrix manager,model_pc_approval_matrix,group_approval_matrix_manager,1,1,1,1
+access_pc_approval_matrix_stage_user,pc.approval.matrix.stage user,model_pc_approval_matrix_stage,group_approval_matrix_user,1,0,0,0
+access_pc_approval_matrix_stage_manager,pc.approval.matrix.stage manager,model_pc_approval_matrix_stage,group_approval_matrix_manager,1,1,1,1
+

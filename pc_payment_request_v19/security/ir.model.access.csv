@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pc_payment_request_user,pc.payment.request user,model_pc_payment_request,group_payment_request_user,1,1,1,0
+access_pc_payment_request_manager,pc.payment.request manager,model_pc_payment_request,group_payment_request_manager,1,1,1,1
+access_pc_payment_request_line_user,pc.payment.request.line user,model_pc_payment_request_line,group_payment_request_user,1,1,1,1
+access_pc_payment_request_line_manager,pc.payment.request.line manager,model_pc_payment_request_line,group_payment_request_manager,1,1,1,1
+access_pc_payment_request_approval_user,pc.payment.request.approval user,model_pc_payment_request_approval,group_payment_request_user,1,0,0,0
+access_pc_payment_request_approval_manager,pc.payment.request.approval manager,model_pc_payment_request_approval,group_payment_request_manager,1,1,1,1
+access_pc_payment_request_reject_wizard,pc.payment.request.reject.wizard,model_pc_payment_request_reject_wizard,group_payment_request_user,1,1,1,1
+
