@@ -21,7 +21,7 @@ class TestPcPaymentRequest(TransactionCase):
                 "email": "pr-approver-one@example.test",
                 "company_id": cls.company.id,
                 "company_ids": [(6, 0, [cls.company.id])],
-                "groups_id": [(6, 0, [user_group.id])],
+                "group_ids": [(6, 0, [user_group.id])],
             }
         )
         cls.approver_two = cls.env["res.users"].with_context(no_reset_password=True).create(
@@ -31,7 +31,7 @@ class TestPcPaymentRequest(TransactionCase):
                 "email": "pr-approver-two@example.test",
                 "company_id": cls.company.id,
                 "company_ids": [(6, 0, [cls.company.id])],
-                "groups_id": [(6, 0, [user_group.id])],
+                "group_ids": [(6, 0, [user_group.id])],
             }
         )
         cls.matrix = cls.env["pc.approval.matrix"].create(
