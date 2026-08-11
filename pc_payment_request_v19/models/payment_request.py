@@ -386,7 +386,7 @@ class PcPaymentRequest(models.Model):
                 )
                 if not existing:
                     request.activity_schedule(
-                        todo_type.id,
+                        "mail.mail_activity_data_todo",
                         user_id=user.id,
                         summary=_("Approve payment request %s") % request.name,
                     )
