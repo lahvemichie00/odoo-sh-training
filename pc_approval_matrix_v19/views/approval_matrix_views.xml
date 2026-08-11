@@ -72,10 +72,9 @@
                 <field name="department_id"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
-                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
-                </group>
+                <separator/>
+                <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
             </search>
         </field>
     </record>

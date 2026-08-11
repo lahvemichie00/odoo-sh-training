@@ -188,17 +188,16 @@
                 <filter string="Paid" name="paid" domain="[('state', '=', 'paid')]"/>
                 <filter string="Rejected" name="rejected"
                         domain="[('state', '=', 'rejected')]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Department" name="group_department"
-                            context="{'group_by': 'department_id'}"/>
-                    <filter string="Requester" name="group_requester"
-                            context="{'group_by': 'requester_id'}"/>
-                    <filter string="Status" name="group_state"
-                            context="{'group_by': 'state'}"/>
-                    <filter string="Company" name="group_company"
-                            context="{'group_by': 'company_id'}"
-                            groups="base.group_multi_company"/>
-                </group>
+                <separator/>
+                <filter string="Department" name="group_department"
+                        context="{'group_by': 'department_id'}"/>
+                <filter string="Requester" name="group_requester"
+                        context="{'group_by': 'requester_id'}"/>
+                <filter string="Status" name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Company" name="group_company"
+                        context="{'group_by': 'company_id'}"
+                        groups="base.group_multi_company"/>
             </search>
         </field>
     </record>
