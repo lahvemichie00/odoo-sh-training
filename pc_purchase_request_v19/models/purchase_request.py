@@ -288,7 +288,7 @@ class PurchaseRequestLine(models.Model):
     @api.onchange("product_id")
     def _onchange_product_id(self):
         if self.product_id:
-            self.desc = self.product_id.get_product_multiline_description_purchase()
+            self.desc = self.product_id.display_name
             if not self.purchase_message:
                 self.purchase_message = self.purchase_request_id.display_name
 
