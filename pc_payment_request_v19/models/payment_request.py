@@ -224,7 +224,13 @@ class PcPaymentRequest(models.Model):
         for request in self:
             request.is_locked = request.state not in ("draft", "rejected")
 
-    @api.depends("approval_ids.state", "approval_ids.sequence", "approval_ids.user_id")
+    @api.depends(
+        "state",
+        "approval_ids.state",
+        "approval_ids.sequence",
+        "approval_ids.user_id",
+    )
+    @api.depends_context("uid")
     def _compute_approval_status(self):
         current_user = self.env.user
         for request in self:
