@@ -18,15 +18,4 @@
               sequence="20"
               groups="pc_payment_request_v19.group_payment_request_approver"/>
 
-    <menuitem id="menu_pc_payment_request_configuration"
-              name="Configuration"
-              parent="menu_pc_payment_request_root"
-              sequence="90"
-              groups="pc_payment_request_v19.group_payment_request_manager"/>
-
-    <menuitem id="menu_pc_approval_matrices"
-              name="Approval Matrices"
-              parent="menu_pc_payment_request_configuration"
-              action="pc_approval_matrix_v19.action_pc_approval_matrix"
-              sequence="10"/>
 </odoo>

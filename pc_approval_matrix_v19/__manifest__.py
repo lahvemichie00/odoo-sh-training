@@ -13,6 +13,6 @@
         "data/default_matrix.xml",
     ],
     "installable": True,
-    "application": False,
+    "application": True,
 }
 
