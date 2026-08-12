@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_payment_request_order_list" model="ir.ui.view">
+        <field name="name">payment.request.order.list</field>
+        <field name="model">payment.request.order</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'waiting_approval'"
+                  decoration-success="state in ('approved', 'paid')"
+                  decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="date_order"/>
+                <field name="payment_mode_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="currency_id"/>
+                <field name="amount_lines_total" sum="Total"/>
+                <field name="user_request_id"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'waiting_approval'"
+                       decoration-success="state in ('approved', 'paid')"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_payment_request_order_form" model="ir.ui.view">
+        <field name="name">payment.request.order.form</field>
+        <field name="model">payment.request.order</field>
+        <field name="arch" type="xml">
+            <form string="Payment Request">
+                <header>
+                    <button name="action_submit" type="object" string="SUBMIT"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="APPROVE"
+                            class="oe_highlight"
+                            groups="pc_payment_request_v19.group_payment_request_approver"
+                            invisible="state != 'waiting_approval' or not approval_can_current_user"/>
+                    <button name="action_open_approval_reject_wizard" type="object" string="REJECT"
+                            groups="pc_payment_request_v19.group_payment_request_approver"
+                            invisible="state != 'waiting_approval' or not approval_can_current_user"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>
+                </header>
+                <sheet>
+                    <field name="approval_can_current_user" invisible="1"/>
+                    <field name="approval_is_approved" invisible="1"/>
+                    <field name="company_currency_id" invisible="1"/>
+                    <field name="is_locked" invisible="1"/>
+                    <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="user_request_id" readonly="is_locked"/>
+                            <field name="department_id" readonly="is_locked" options="{'no_create': True}"/>
+                            <field name="payment_details" readonly="is_locked"/>
+                            <field name="payment_voucher" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="create_date" string="Created on" readonly="1"/>
+                            <field name="company_id" readonly="is_locked"/>
+                            <field name="currency_id" readonly="is_locked"/>
+                            <field name="date_order" readonly="is_locked"/>
+                            <field name="payment_mode_id" readonly="is_locked" options="{'no_create': True}"/>
+                            <field name="amount_currency" readonly="1"/>
+                            <field name="journal_id" readonly="is_locked" optional="hide"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Payment Request Line">
+                            <field name="line_ids" readonly="is_locked">
+                                <list editable="bottom">
+                                    <field name="partner_id"/>
+                                    <field name="res_partner_bank_id"/>
+                                    <field name="bank_id"/>
+                                    <field name="bic"/>
+                                    <field name="routing_no"/>
+                                    <field name="bank_address"/>
+                                    <field name="currency_id"/>
+                                    <field name="amount" sum="Total"/>
+                                    <field name="account_id" optional="hide"/>
+                                    <field name="analytic_account_id" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Other Information">
+                            <group>
+                                <group>
+                                    <field name="submitted_by_id"/>
+                                    <field name="approved_by_id"/>
+                                    <field name="rejected_by_id"/>
+                                    <field name="reject_reason"/>
+                                </group>
+                                <group>
+                                    <field name="date_submitted"/>
+                                    <field name="date_approved"/>
+                                    <field name="date_rejected"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Approvals">
+                            <field name="approval_document_ids" readonly="1">
+                                <list create="0" delete="0">
+                                    <field name="res_model"/>
+                                    <field name="res_name"/>
+                                    <field name="matrix_id"/>
+                                    <field name="approver_seq"/>
+                                    <field name="approver_ids" widget="many2many_tags"/>
+                                    <field name="minimum_approved"/>
+                                    <field name="approved_by_ids" widget="many2many_tags"/>
+                                    <field name="rejected_by_ids" widget="many2many_tags"/>
+                                    <field name="is_approved"/>
+                                </list>
+                            </field>
+                            <group>
+                                <field name="approval_is_approved" string="Approved" readonly="1"/>
+                                <button name="action_fetch_matrix" type="object" string="FETCH MATRIX"
+                                        groups="pc_payment_request_v19.group_payment_request_manager"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_payment_request_order_search" model="ir.ui.view">
+        <field name="name">payment.request.order.search</field>
+        <field name="model">payment.request.order</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="user_request_id"/>
+                <field name="department_id"/>
+                <filter string="My Requests" name="my_requests" domain="[('user_request_id', '=', uid)]"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Waiting Approval" name="waiting" domain="[('state', '=', 'waiting_approval')]"/>
+                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Paid" name="paid" domain="[('state', '=', 'paid')]"/>
+                <filter string="Rejected" name="rejected" domain="[('state', '=', 'rejected')]"/>
+                <separator/>
+                <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                <filter string="User Request" name="group_user" context="{'group_by': 'user_request_id'}"/>
+                <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_payment_request_order" model="ir.actions.act_window">
+        <field name="name">Payment Request</field>
+        <field name="res_model">payment.request.order</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_payment_mode_list" model="ir.ui.view">
+        <field name="name">account.payment.mode.list</field>
+        <field name="model">account.payment.mode</field>
+        <field name="arch" type="xml">
+            <list editable="bottom"><field name="name"/><field name="active" optional="hide"/></list>
+        </field>
+    </record>
+
+    <record id="action_payment_mode" model="ir.actions.act_window">
+        <field name="name">Payment Modes</field>
+        <field name="res_model">account.payment.mode</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_payment_request_root" name="Payment Requests" sequence="35"
+              groups="group_payment_request_user"/>
+    <menuitem id="menu_payment_request" name="Payment Request"
+              parent="menu_payment_request_root" action="action_payment_request_order" sequence="10"/>
+    <menuitem id="menu_payment_request_configuration" name="Configuration"
+              parent="menu_payment_request_root" sequence="90"
+              groups="group_payment_request_manager"/>
+    <menuitem id="menu_payment_mode" name="Payment Modes"
+              parent="menu_payment_request_configuration" action="action_payment_mode" sequence="10"/>
+</odoo>

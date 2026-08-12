@@ -1,0 +1,12 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_approval_matrix_user,approval.matrix user,model_approval_matrix,group_approval_matrix_user,1,0,0,0
+access_approval_matrix_manager,approval.matrix manager,model_approval_matrix,group_approval_matrix_manager,1,1,1,1
+access_approval_matrix_rule_user,approval.matrix.rule user,model_approval_matrix_rule,group_approval_matrix_user,1,0,0,0
+access_approval_matrix_rule_manager,approval.matrix.rule manager,model_approval_matrix_rule,group_approval_matrix_manager,1,1,1,1
+access_approval_matrix_approver_user,approval.matrix.approver user,model_approval_matrix_approver,group_approval_matrix_user,1,0,0,0
+access_approval_matrix_approver_manager,approval.matrix.approver manager,model_approval_matrix_approver,group_approval_matrix_manager,1,1,1,1
+access_approval_document_user,approval.matrix.document.approval user,model_approval_matrix_document_approval,group_approval_matrix_user,1,0,0,0
+access_approval_document_manager,approval.matrix.document.approval manager,model_approval_matrix_document_approval,group_approval_matrix_manager,1,1,1,1
+access_rejection_message_user,rejection.message user,model_rejection_message,group_approval_matrix_user,1,0,0,0
+access_rejection_message_manager,rejection.message manager,model_rejection_message,group_approval_matrix_manager,1,1,1,1
+access_approval_reject_wizard,approval reject wizard,model_approval_matrix_reject_wizard,base.group_user,1,1,1,1

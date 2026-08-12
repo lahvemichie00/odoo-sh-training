@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_payment_request_user,payment.request.order user,model_payment_request_order,group_payment_request_user,1,1,1,1
+access_payment_request_line_user,payment.request.order.line user,model_payment_request_order_line,group_payment_request_user,1,1,1,1
+access_payment_mode_user,account.payment.mode user,model_account_payment_mode,group_payment_request_user,1,0,0,0
+access_payment_mode_manager,account.payment.mode manager,model_account_payment_mode,group_payment_request_manager,1,1,1,1

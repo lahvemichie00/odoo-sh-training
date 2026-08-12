@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_approval_matrix_list" model="ir.ui.view">
+        <field name="name">approval.matrix.list</field>
+        <field name="model">approval.matrix</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="approver_summary" string="Approvers"/>
+                <field name="res_model" optional="hide"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_approval_matrix_kanban" model="ir.ui.view">
+        <field name="name">approval.matrix.kanban</field>
+        <field name="model">approval.matrix</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="res_model">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="create_uid"/>
+                <field name="create_date"/>
+                <field name="active"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between gap-2">
+                            <strong class="text-break"><field name="name"/></strong>
+                            <strong class="text-end"><field name="company_id"/></strong>
+                        </div>
+                        <div class="text-muted mt-2">
+                            <field name="create_uid"/> <field name="create_date"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_approval_matrix_form" model="ir.ui.view">
+        <field name="name">approval.matrix.form</field>
+        <field name="model">approval.matrix</field>
+        <field name="arch" type="xml">
+            <form string="Approval Matrix">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-warning" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Approval matrix name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="model_id" options="{'no_create': True}"/>
+                            <field name="res_model" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Rules">
+                            <field name="rule_ids">
+                                <list editable="bottom">
+                                    <field name="model_id" string="Model" column_invisible="True"/>
+                                    <field name="field_id" options="{'no_create': True}"/>
+                                    <field name="operator"/>
+                                    <field name="value"/>
+                                    <field name="related_field_model" optional="hide"/>
+                                    <field name="m2o_value_id" string="Relation Val"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Approver">
+                            <group>
+                                <field name="dept_manager_as_approver"/>
+                                <field name="user_request_field_id" options="{'no_create': True}"
+                                       invisible="not dept_manager_as_approver"/>
+                            </group>
+                            <field name="approver_ids">
+                                <list editable="bottom">
+                                    <field name="seq"/>
+                                    <field name="user_ids" widget="many2many_tags"/>
+                                    <field name="require_all_approver"/>
+                                    <field name="min_approver" invisible="require_all_approver"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_approval_matrix_search" model="ir.ui.view">
+        <field name="name">approval.matrix.search</field>
+        <field name="model">approval.matrix</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="model_id"/>
+                <field name="company_id"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Model" name="group_model" context="{'group_by': 'model_id'}"/>
+                <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"
+                        groups="base.group_multi_company"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_approval_matrix" model="ir.actions.act_window">
+        <field name="name">Approval Matrix</field>
+        <field name="res_model">approval.matrix</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{}</field>
+    </record>
+
+    <record id="view_approval_document_list" model="ir.ui.view">
+        <field name="name">approval.matrix.document.approval.list</field>
+        <field name="model">approval.matrix.document.approval</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0">
+                <field name="res_model" string="Related Document Model"/>
+                <field name="res_name"/>
+                <field name="matrix_id"/>
+                <field name="approver_seq"/>
+                <field name="approver_ids" widget="many2many_tags"/>
+                <field name="minimum_approved"/>
+                <field name="approved_by_ids" widget="many2many_tags"/>
+                <field name="rejected_by_ids" widget="many2many_tags"/>
+                <field name="approved_count"/>
+                <field name="rejected_count"/>
+                <field name="is_approved"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_approval_document_form" model="ir.ui.view">
+        <field name="name">approval.matrix.document.approval.form</field>
+        <field name="model">approval.matrix.document.approval</field>
+        <field name="arch" type="xml">
+            <form string="Document Approval" create="0" delete="0">
+                <header>
+                    <button name="action_send_notification" type="object"
+                            string="Send Notification for Approver Docs"/>
+                    <button name="action_open_document" type="object" string="Open Document"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="matrix_id" readonly="1"/></h1>
+                        <h2><field name="res_name" readonly="1"/></h2>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="res_model_id" readonly="1"/>
+                            <field name="res_model" readonly="1"/>
+                            <field name="matrix_id" readonly="1"/>
+                            <field name="approver_seq" readonly="1"/>
+                            <field name="approver_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="minimum_approved" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="approved_by_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="rejected_by_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="approved_count" readonly="1"/>
+                            <field name="rejected_count" readonly="1"/>
+                            <field name="is_approved" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_approval_document_search" model="ir.ui.view">
+        <field name="name">approval.matrix.document.approval.search</field>
+        <field name="model">approval.matrix.document.approval</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="res_name"/>
+                <field name="matrix_id"/>
+                <field name="approver_ids"/>
+                <filter string="My Pending Approvals" name="my_pending"
+                        domain="[('approver_ids', '=', uid), ('approved_by_ids', '!=', uid), ('rejected_by_ids', '!=', uid), ('is_approved', '=', False)]"/>
+                <filter string="Approved" name="approved" domain="[('is_approved', '=', True)]"/>
+                <separator/>
+                <filter string="Matrix" name="group_matrix" context="{'group_by': 'matrix_id'}"/>
+                <filter string="Document Model" name="group_model" context="{'group_by': 'res_model'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_approval_document" model="ir.actions.act_window">
+        <field name="name">Document Approval</field>
+        <field name="res_model">approval.matrix.document.approval</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_send_approval_notification" model="ir.actions.server">
+        <field name="name">Send Notification for Approver Docs</field>
+        <field name="model_id" ref="model_approval_matrix_document_approval"/>
+        <field name="binding_model_id" ref="model_approval_matrix_document_approval"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">records.action_send_notification()</field>
+    </record>
+
+    <record id="view_rejection_message_list" model="ir.ui.view">
+        <field name="name">rejection.message.list</field>
+        <field name="model">rejection.message</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="res_model_id"/>
+                <field name="res_model"/>
+                <field name="name"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_rejection_message_form" model="ir.ui.view">
+        <field name="name">rejection.message.form</field>
+        <field name="model">rejection.message</field>
+        <field name="arch" type="xml">
+            <form string="Rejection Message">
+                <sheet>
+                    <group>
+                        <field name="res_model_id" options="{'no_create': True}"/>
+                        <field name="res_model" readonly="1"/>
+                        <field name="name"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_rejection_message" model="ir.actions.act_window">
+        <field name="name">Rejection Message</field>
+        <field name="res_model">rejection.message</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_approval_matrix_root" name="Approval Matrix" sequence="30"
+              groups="group_approval_matrix_user"/>
+    <menuitem id="menu_approval_matrix_rule" name="Approval Matrix Rule"
+              parent="menu_approval_matrix_root" action="action_approval_matrix" sequence="10"/>
+    <menuitem id="menu_approval_document" name="Doc. Approval"
+              parent="menu_approval_matrix_root" action="action_approval_document" sequence="20"/>
+    <menuitem id="menu_rejection_message" name="Rejection Message"
+              parent="menu_approval_matrix_root" action="action_rejection_message" sequence="30"
+              groups="group_approval_matrix_manager"/>
+</odoo>

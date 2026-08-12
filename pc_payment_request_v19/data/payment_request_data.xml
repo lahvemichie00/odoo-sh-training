@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_payment_request" model="ir.sequence">
+        <field name="name">Payment Request</field>
+        <field name="code">payment.request.order</field>
+        <field name="prefix">PRF/%(y)s%(month)s/</field>
+        <field name="padding">3</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="payment_mode_bank" model="account.payment.mode">
+        <field name="name">BANK</field>
+    </record>
+    <record id="payment_mode_cash" model="account.payment.mode">
+        <field name="name">CASH</field>
+    </record>
+    <record id="payment_mode_credit_card" model="account.payment.mode">
+        <field name="name">CREDIT CARD</field>
+    </record>
+    <record id="payment_mode_fpx" model="account.payment.mode">
+        <field name="name">FPX</field>
+    </record>
+</odoo>
