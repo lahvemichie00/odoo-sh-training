@@ -25,15 +25,32 @@
         <field name="arch" type="xml">
             <form string="Purchase Request">
                 <header>
-                    <button name="action_confirm" type="object" string="CONFIRM"
-                            class="oe_highlight" invisible="state != 'draft'"/>
-                    <button name="action_approve" type="object" string="APPROVE"
+                    <button name="action_confirm"
+                            type="object"
+                            string="CONFIRM"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_approve"
+                            type="object"
+                            string="APPROVE"
                             class="oe_highlight"
                             invisible="state != 'waiting_approval' or not approval_can_current_user"/>
-                    <button name="action_open_approval_reject_wizard" type="object" string="REJECT"
+
+                    <button name="action_open_approval_reject_wizard"
+                            type="object"
+                            string="REJECT"
                             invisible="state != 'waiting_approval' or not approval_can_current_user"/>
-                    <field name="state" widget="statusbar"
-                           statusbar_visible="draft,waiting_approval,approved"/>
+
+                    <button name="action_resubmit"
+                            type="object"
+                            string="RESUBMIT"
+                            class="oe_highlight"
+                            invisible="state != 'reject'"/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,waiting_approval,approved,reject"/>
                 </header>
                 <sheet>
                     <field name="approval_can_current_user" invisible="1"/>

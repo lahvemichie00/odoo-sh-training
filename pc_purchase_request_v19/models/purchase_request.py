@@ -158,7 +158,10 @@ class PurchaseRequest(models.Model):
     @api.depends("state")
     def _compute_is_locked(self):
         for request in self:
-            request.is_locked = request.state != "draft"
+            request.is_locked = request.state not in (
+                "draft",
+                "reject",
+            )
 
     @api.constrains("line_ids.qty")
     def _check_line_quantity(self):
@@ -245,6 +248,33 @@ class PurchaseRequest(models.Model):
             % {"user": user.display_name, "reason": reason}
         )
 
+    def action_resubmit(self):
+        for request in self:
+            if request.state != "reject":
+                raise UserError(
+                    _("Only rejected purchase requests can be resubmitted.")
+                )
+
+            request.with_context(
+                skip_request_workflow=True
+            ).write(
+                {
+                    "state": "draft",
+                    "rejected_by": False,
+                    "date_rejected": False,
+                    "reject_message": False,
+                    "approved_by": False,
+                    "date_approved": False,
+                }
+            )
+
+            request.message_post(
+                body=_(
+                    "Purchase Request resubmitted and returned to Draft."
+                )
+            )
+
+        return True
 
 class PurchaseRequestLine(models.Model):
     _name = "purchase.request.line"
