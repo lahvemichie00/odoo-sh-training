@@ -274,19 +274,19 @@ class PurchaseRequestLine(models.Model):
     incoming_qty = fields.Float(string="Incoming", compute="_compute_stock")
 
     @api.depends("product_id")
-def _compute_product_fields(self):
-    for line in self:
-        if line.product_id:
-            line.default_code = line.product_id.default_code
-            line.product_uom_id = (
-                line.product_id.product_tmpl_id.uom_po_id
-                or line.product_id.uom_id
-            )
-            line.group_category_id = line.product_id.product_tmpl_id.group_category_id
-        else:
-            line.default_code = False
-            line.product_uom_id = False
-            line.group_category_id = False
+    def _compute_product_fields(self):
+        for line in self:
+            if line.product_id:
+                line.default_code = line.product_id.default_code
+                line.product_uom_id = (
+                    line.product_id.product_tmpl_id.uom_po_id
+                    or line.product_id.uom_id
+                )
+                line.group_category_id = line.product_id.product_tmpl_id.group_category_id
+            else:
+                line.default_code = False
+                line.product_uom_id = False
+                line.group_category_id = False
 
     @api.onchange("product_id")
     def _onchange_product_id(self):
