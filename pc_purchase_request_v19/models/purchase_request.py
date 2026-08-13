@@ -92,9 +92,22 @@ class PurchaseRequest(models.Model):
         "product.group.category", string="Group Category", tracking=True
     )
     line_ids = fields.One2many(
-        "purchase.request.line", "purchase_request_id", string="Purchase Request Line", copy=True
+        "purchase.request.line",
+        "purchase_request_id",
+        string="Purchase Request Line",
+        copy=True,
     )
-    is_locked = fields.Boolean(compute="_compute_is_locked")
+
+    total_qty = fields.Float(
+        string="Total Quantity",
+        compute="_compute_total_qty",
+        store=True,
+        tracking=True,
+    )
+
+    is_locked = fields.Boolean(
+        compute="_compute_is_locked"
+    )
 
     @api.model
     def _default_employee(self, user=None, company=None):
@@ -133,6 +146,14 @@ class PurchaseRequest(models.Model):
         employee = self._default_employee(self.user_id, self.company_id)
         if employee:
             self.employee_id = employee
+
+    @api.depends("line_ids.qty")
+    def _compute_total_qty(self):
+        for request in self:
+            request.total_qty = sum(
+                request.line_ids.mapped("qty")
+            )
+
 
     @api.depends("state")
     def _compute_is_locked(self):
