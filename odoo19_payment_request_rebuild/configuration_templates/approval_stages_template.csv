@@ -1,0 +1,3 @@
+id,matrix_id/id,name,sequence,approver_ids/id,department_manager_as_approver,require_all_approvers,minimum_approvals
+__import__.pc_stage_example_0,__import__.pc_matrix_admin_low,Department Approval,0,base.user_admin,False,True,1
+__import__.pc_stage_example_1,__import__.pc_matrix_admin_low,Finance Approval,1,base.user_admin,False,True,1

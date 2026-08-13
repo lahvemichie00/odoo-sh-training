@@ -1,0 +1,50 @@
+id,name,sequence,company_id/id,department_id,minimum_amount,minimum_inclusive,has_maximum,maximum_amount,maximum_inclusive,active
+__import__.pc_matrix_admin_low,PRF - Admin <= RM2K,10,base.main_company,Admin,0,True,True,2000,True,True
+__import__.pc_matrix_admin_mid,PRF - Admin RM2K < x <= RM20K,20,base.main_company,Admin,2000,False,True,20000,True,True
+__import__.pc_matrix_admin_high,PRF - Admin > RM20K,30,base.main_company,Admin,20000,False,False,0,True,True
+__import__.pc_matrix_finance_low,PRF - Finance & Accounts <= RM2K,10,base.main_company,Finance & Accounts Department,0,True,True,2000,True,True
+__import__.pc_matrix_finance_mid,PRF - Finance & Accounts RM2K < x <= RM20K,20,base.main_company,Finance & Accounts Department,2000,False,True,20000,True,True
+__import__.pc_matrix_finance_high,PRF - Finance & Accounts > RM20K,30,base.main_company,Finance & Accounts Department,20000,False,False,0,True,True
+__import__.pc_matrix_dental_low,PRF - S&M Dental <= RM2K,10,base.main_company,Sales & Marketing (Dental),0,True,True,2000,True,True
+__import__.pc_matrix_dental_mid,PRF - S&M Dental RM2K < x <= RM20K,20,base.main_company,Sales & Marketing (Dental),2000,False,True,20000,True,True
+__import__.pc_matrix_dental_high,PRF - S&M Dental > RM20K,30,base.main_company,Sales & Marketing (Dental),20000,False,False,0,True,True
+__import__.pc_matrix_wellness_low,PRF - S&M Wellness <= RM2K,10,base.main_company,Sales & Marketing (Wellness),0,True,True,2000,True,True
+__import__.pc_matrix_wellness_mid,PRF - S&M Wellness RM2K < x <= RM20K,20,base.main_company,Sales & Marketing (Wellness),2000,False,True,20000,True,True
+__import__.pc_matrix_wellness_high,PRF - S&M Wellness > RM20K,30,base.main_company,Sales & Marketing (Wellness),20000,False,False,0,True,True
+__import__.pc_matrix_pa_low,PRF - Personal Assistant <= RM2K,10,base.main_company,Personal Assistant,0,True,True,2000,True,True
+__import__.pc_matrix_pa_mid,PRF - Personal Assistant RM2K < x <= RM20K,20,base.main_company,Personal Assistant,2000,False,True,20000,True,True
+__import__.pc_matrix_pa_high,PRF - Personal Assistant > RM20K,30,base.main_company,Personal Assistant,20000,False,False,0,True,True
+__import__.pc_matrix_production_low,PRF - Operation/Production <= RM2K,10,base.main_company,Production Department,0,True,True,2000,True,True
+__import__.pc_matrix_production_mid,PRF - Operation/Production RM2K < x <= RM20K,20,base.main_company,Production Department,2000,False,True,20000,True,True
+__import__.pc_matrix_production_high,PRF - Operation/Production > RM20K,30,base.main_company,Production Department,20000,False,False,0,True,True
+__import__.pc_matrix_hr_low,PRF - Human Resource <= RM2K,10,base.main_company,HR & Payroll Department,0,True,True,2000,True,True
+__import__.pc_matrix_hr_mid,PRF - Human Resource RM2K < x <= RM20K,20,base.main_company,HR & Payroll Department,2000,False,True,20000,True,True
+__import__.pc_matrix_hr_high,PRF - Human Resource > RM20K,30,base.main_company,HR & Payroll Department,20000,False,False,0,True,True
+__import__.pc_matrix_ra_low,PRF - RA <= RM2K,10,base.main_company,Regulatory Affairs,0,True,True,2000,True,True
+__import__.pc_matrix_ra_mid,PRF - RA RM2K < x <= RM20K,20,base.main_company,Regulatory Affairs,2000,False,True,20000,True,True
+__import__.pc_matrix_ra_high,PRF - RA > RM20K,30,base.main_company,Regulatory Affairs,20000,False,False,0,True,True
+__import__.pc_matrix_shipping_low,PRF - Shipping <= RM2K,10,base.main_company,Shipping & Logistic Department,0,True,True,2000,True,True
+__import__.pc_matrix_shipping_mid,PRF - Shipping RM2K < x <= RM20K,20,base.main_company,Shipping & Logistic Department,2000,False,True,20000,True,True
+__import__.pc_matrix_shipping_high,PRF - Shipping > RM20K,30,base.main_company,Shipping & Logistic Department,20000,False,False,0,True,True
+__import__.pc_matrix_purchasing_low,PRF - Purchasing <= RM2K,10,base.main_company,Sourcing & Purchasing Department,0,True,True,2000,True,True
+__import__.pc_matrix_purchasing_mid,PRF - Purchasing RM2K < x <= RM20K,20,base.main_company,Sourcing & Purchasing Department,2000,False,True,20000,True,True
+__import__.pc_matrix_purchasing_high,PRF - Purchasing > RM20K,30,base.main_company,Sourcing & Purchasing Department,20000,False,False,0,True,True
+__import__.pc_matrix_ehs_low,PRF - EHS <= RM2K,10,base.main_company,EHS Department,0,True,True,2000,True,True
+__import__.pc_matrix_ehs_mid,PRF - EHS RM2K < x <= RM20K,20,base.main_company,EHS Department,2000,False,True,20000,True,True
+__import__.pc_matrix_ehs_high,PRF - EHS > RM20K,30,base.main_company,EHS Department,20000,False,False,0,True,True
+__import__.pc_matrix_maintenance_low,PRF - Operation/Maintenance <= RM2K,10,base.main_company,Maintenance Department,0,True,True,2000,True,True
+__import__.pc_matrix_maintenance_mid,PRF - Operation/Maintenance RM2K < x <= RM20K,20,base.main_company,Maintenance Department,2000,False,True,20000,True,True
+__import__.pc_matrix_maintenance_high,PRF - Operation/Maintenance > RM20K,30,base.main_company,Maintenance Department,20000,False,False,0,True,True
+__import__.pc_matrix_planning_low,PRF - Planning <= RM2K,10,base.main_company,Planning Department,0,True,True,2000,True,True
+__import__.pc_matrix_planning_mid,PRF - Planning RM2K < x <= RM20K,20,base.main_company,Planning Department,2000,False,True,20000,True,True
+__import__.pc_matrix_planning_high,PRF - Planning > RM20K,30,base.main_company,Planning Department,20000,False,False,0,True,True
+__import__.pc_matrix_qaqc_low,PRF - QAQC <= RM2K,10,base.main_company,QAQC Department,0,True,True,2000,True,True
+__import__.pc_matrix_qaqc_mid,PRF - QAQC RM2K < x <= RM20K,20,base.main_company,QAQC Department,2000,False,True,20000,True,True
+__import__.pc_matrix_qaqc_high,PRF - QAQC > RM20K,30,base.main_company,QAQC Department,20000,False,False,0,True,True
+__import__.pc_matrix_rd_low,PRF - R&D <= RM2K,10,base.main_company,R&D Department,0,True,True,2000,True,True
+__import__.pc_matrix_rd_mid,PRF - R&D RM2K < x <= RM20K,20,base.main_company,R&D Department,2000,False,True,20000,True,True
+__import__.pc_matrix_rd_high,PRF - R&D > RM20K,30,base.main_company,R&D Department,20000,False,False,0,True,True
+__import__.pc_matrix_warehouse_low,PRF - Warehouse <= RM2K,10,base.main_company,Warehouse Department,0,True,True,2000,True,True
+__import__.pc_matrix_warehouse_mid,PRF - Warehouse RM2K < x <= RM20K,20,base.main_company,Warehouse Department,2000,False,True,20000,True,True
+__import__.pc_matrix_warehouse_high,PRF - Warehouse > RM20K,30,base.main_company,Warehouse Department,20000,False,False,0,True,True
+
