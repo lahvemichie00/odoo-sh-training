@@ -255,6 +255,13 @@ class PurchaseRequestLine(models.Model):
     purchase_request_id = fields.Many2one(
         "purchase.request", string="Purchase Request", ondelete="cascade", index=True
     )
+    
+    selected_for_purchase = fields.Boolean(
+        string="Select",
+        default=False,
+        tracking=True,
+    )
+
     product_id = fields.Many2one(
         "product.product", string="Product", required=True, domain=[("purchase_ok", "=", True)]
     )
@@ -326,14 +333,38 @@ class PurchaseRequestLine(models.Model):
             line.stock_on_hand = line.product_id.qty_available
             line.incoming_qty = line.product_id.incoming_qty
 
+    @api.constrains("selected_for_purchase")
+    def _check_selected_for_purchase(self):
+        for line in self:
+            if line.selected_for_purchase:
+                if line.purchase_request_id.state != "approved":
+                    raise ValidationError(
+                        _(
+                              "Only approved purchase requests can select items for RFQ or PO."
+                         )
+                    )
+
     def _validate_for_order(self):
         for line in self:
             if line.purchase_request_id.state != "approved":
-                raise UserError(_("Only approved purchase request lines can create an RFQ or PO."))
+                raise UserError(
+                    _("Only approved purchase requests can create RFQ or PO.")
+                )
+
+            if not line.selected_for_purchase:
+                raise UserError(
+                    _("Please select the item before creating RFQ or PO.")
+                )
+
             if line.state == "cancel":
-                raise UserError(_("Cancelled purchase request lines cannot create an RFQ or PO."))
+                raise UserError(
+                    _("Cancelled purchase request lines cannot create RFQ or PO.")
+                )
+
             if line.qty_released >= line.qty:
-                raise UserError(_("The selected line has already been fully released."))
+                raise UserError(
+                    _("The selected line has already been fully released.")
+                )
 
     def action_open_create_order_wizard(self):
         self._validate_for_order()
