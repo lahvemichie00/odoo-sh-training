@@ -232,14 +232,43 @@ class ApprovalMatrixRule(models.Model):
 
     def _matches_record(self, record):
         self.ensure_one()
-        if self.field_id.name not in record._fields:
+
+        field_name = self.field_id.name
+
+        # Direct field
+        if field_name in record._fields:
+            actual = record[field_name]
+
+        # Related field support e.g. line_ids.qty
+        elif "." in field_name:
+            parts = field_name.split(".")
+            actual = record
+
+            for part in parts:
+                if not actual:
+                    return False
+
+                if isinstance(actual, models.BaseModel):
+                    actual = actual.mapped(part)
+
+        else:
             return False
-        actual = record[self.field_id.name]
+
+
+        if isinstance(actual, models.BaseModel):
+            actual = actual.ids
+
+
         if self.field_id.ttype == "many2one":
-            actual = actual.id
+            actual = actual.id if actual else False
+
         elif self.field_id.ttype in ("one2many", "many2many"):
             actual = actual.ids
+
+
         expected = self._coerce_expected()
+
+
         operations = {
             "=": lambda left, right: left == right,
             "!=": lambda left, right: left != right,
@@ -250,8 +279,17 @@ class ApprovalMatrixRule(models.Model):
             "in": lambda left, right: left in right,
             "not in": lambda left, right: left not in right,
         }
+
+
         try:
+            if isinstance(actual, list):
+                return any(
+                    operations[self.operator](value, expected)
+                    for value in actual
+                )
+
             return operations[self.operator](actual, expected)
+
         except (TypeError, ValueError):
             return False
 
