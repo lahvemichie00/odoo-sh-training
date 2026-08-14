@@ -336,7 +336,9 @@ class PurchaseRequest(models.Model):
                 }
             )
 
-            line.purchase_line_ids = [
+            line.with_context(
+                 skip_request_lock=True
+            ).purchase_line_ids = [
                 (4, po_line.id)
             ]
 
