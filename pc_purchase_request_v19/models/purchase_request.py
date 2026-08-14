@@ -173,7 +173,6 @@ class PurchaseRequest(models.Model):
             "employee_id",
             "company_id",
             "is_asset",
-            "line_ids",
          }
         if protected.intersection(values) and not self.env.context.get("skip_request_lock"):
             if self.filtered(lambda request: request.state != "draft"):
