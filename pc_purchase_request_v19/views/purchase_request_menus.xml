@@ -5,12 +5,15 @@
               groups="purchase.group_purchase_user"/>
     <menuitem id="menu_purchase_request" name="Purchase Request"
               parent="menu_purchase_request_root" action="action_purchase_request" sequence="10"/>
-    <menuitem id="menu_purchase_request_line" name="Purchase Request Line"
-              parent="menu_purchase_request_root" action="action_purchase_request_line" sequence="20"/>
+<!-- Purchase Request Line menu removed
+<menuitem id="menu_purchase_request_line" name="Purchase Request Line"
+          parent="menu_purchase_request_root" action="action_purchase_request_line" sequence="20"/>-->
     <menuitem id="menu_purchase_request_configuration" name="Configuration"
               parent="menu_purchase_request_root" sequence="90"
               groups="purchase.group_purchase_manager"/>
-    <menuitem id="menu_product_group_category" name="Group Categories"
-              parent="menu_purchase_request_configuration" action="action_product_group_category"
-              sequence="10"/>
+    <!-- Group Categories removed
+<menuitem id="menu_product_group_category" name="Group Categories"
+          parent="menu_purchase_request_configuration" action="action_product_group_category"
+          sequence="10"/>
+-->
 </odoo>

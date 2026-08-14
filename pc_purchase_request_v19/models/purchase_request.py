@@ -14,11 +14,6 @@ class ProductGroupCategory(models.Model):
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
-    group_category_id = fields.Many2one(
-        "product.group.category", string="Group Category", ondelete="set null"
-    )
-
-
 class PurchaseRequest(models.Model):
     _name = "purchase.request"
     _description = "Purchase Request"
@@ -88,9 +83,7 @@ class PurchaseRequest(models.Model):
     rejected_by = fields.Many2one("res.users", string="Rejected By", readonly=True)
     date_rejected = fields.Datetime(string="Rejected Date", readonly=True)
     reject_message = fields.Text(string="Reject Reason", readonly=True)
-    group_category_id = fields.Many2one(
-        "product.group.category", string="Group Category", tracking=True
-    )
+
     line_ids = fields.One2many(
         "purchase.request.line",
         "purchase_request_id",
@@ -171,9 +164,13 @@ class PurchaseRequest(models.Model):
 
     def write(self, values):
         protected = {
-            "date_order", "user_id", "employee_id", "company_id", "is_asset",
-            "group_category_id", "line_ids",
-        }
+            "date_order",
+            "user_id",
+            "employee_id",
+            "company_id",
+            "is_asset",
+            "line_ids",
+         }
         if protected.intersection(values) and not self.env.context.get("skip_request_lock"):
             if self.filtered(lambda request: request.state != "draft"):
                 raise UserError(_("Only draft purchase requests can be edited."))
@@ -273,8 +270,86 @@ class PurchaseRequest(models.Model):
                     "Purchase Request resubmitted and returned to Draft."
                 )
             )
-
+    
         return True
+
+    def action_create_rfq(self):
+        self.ensure_one()
+
+        selected_lines = self.line_ids.filtered(
+            lambda line: line.selected_for_purchase
+        )
+
+        if not selected_lines:
+            raise UserError(
+                _("Please select at least one item to create RFQ.")
+            )
+
+        return self._create_purchase_document(
+            selected_lines,
+            confirm=False,
+        )
+
+    def action_create_po(self):
+        self.ensure_one()
+
+        selected_lines = self.line_ids.filtered(
+            lambda line: line.selected_for_purchase
+        )
+
+        if not selected_lines:
+            raise UserError(
+                _("Please select at least one item to create PO.")
+            )
+
+        return self._create_purchase_document(
+            selected_lines,
+            confirm=True,
+        )
+    def _create_purchase_document(self, selected_lines, confirm=False):
+        self.ensure_one()
+
+        self._validate_for_order()
+
+        if not selected_lines:
+            raise UserError(
+                _("No selected items found.")
+            )
+
+        order = self.env["purchase.order"].create(
+            {
+                "company_id": self.company_id.id,
+                "origin": self.name,
+            }
+        )
+
+        for line in selected_lines:
+            po_line = self.env["purchase.order.line"].create(
+                {
+                    "order_id": order.id,
+                    "product_id": line.product_id.id,
+                    "name": line.desc or line.product_id.display_name,
+                    "product_qty": line.qty,
+                    "product_uom": line.product_uom_id.id,
+                    "date_planned": fields.Datetime.now(),
+                    "purchase_request_line_id": line.id,
+                }
+            )
+
+            line.purchase_line_ids = [
+                (4, po_line.id)
+            ]
+
+        if confirm:
+            order.button_confirm()
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Purchase Order"),
+            "res_model": "purchase.order",
+            "view_mode": "form",
+            "res_id": order.id,
+        }
 
 class PurchaseRequestLine(models.Model):
     _name = "purchase.request.line"
@@ -309,10 +384,7 @@ class PurchaseRequestLine(models.Model):
     )
     request_eta = fields.Date(string="Request ETA", required=True, default=fields.Date.context_today)
     purchase_message = fields.Text(string="Reason For Purchase")
-    group_category_id = fields.Many2one(
-        "product.group.category", string="Group Category", compute="_compute_product_fields",
-        store=True, readonly=False,
-    )
+
     default_code = fields.Char(string="SKU", compute="_compute_product_fields", store=True)
     origin = fields.Char(string="Reference Number", compute="_compute_release", store=True)
     pr_line_state = fields.Selection(
@@ -331,17 +403,15 @@ class PurchaseRequestLine(models.Model):
     stock_on_hand = fields.Float(string="Stock On Hand", compute="_compute_stock")
     incoming_qty = fields.Float(string="Incoming", compute="_compute_stock")
 
-    @api.depends("product_id")    
+    @api.depends("product_id")
     def _compute_product_fields(self):
         for line in self:
             if line.product_id:
                 line.default_code = line.product_id.default_code
                 line.product_uom_id = line.product_id.uom_id
-                line.group_category_id = line.product_id.product_tmpl_id.group_category_id
             else:
                 line.default_code = False
                 line.product_uom_id = False
-                line.group_category_id = False
 
     @api.onchange("product_id")
     def _onchange_product_id(self):

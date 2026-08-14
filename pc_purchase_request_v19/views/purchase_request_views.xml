@@ -47,6 +47,18 @@
                             string="RESUBMIT"
                             class="oe_highlight"
                             invisible="state != 'reject'"/>
+                  
+                    <button name="action_create_rfq"
+                            type="object"
+                            string="CREATE RFQ"
+                            class="oe_highlight"
+                            invisible="state != 'approved'"/>
+
+                    <button name="action_create_po"
+                            type="object"
+                            string="CREATE PO"
+                            class="oe_highlight"
+                            invisible="state != 'approved'"/>
 
                     <field name="state"
                            widget="statusbar"
@@ -62,7 +74,7 @@
                             <field name="user_id" readonly="is_locked"/>
                             <field name="employee_id" readonly="is_locked" options="{'no_create': True}" invisible="1"/>
                             <field name="department_id" readonly="1"/>
-                            <field name="group_category_id" readonly="is_locked"/>
+                        <!--<field name="group_category_id" readonly="is_locked"/>-->
                         </group>
                         <group>
                             <field name="date_order" string="Requestion Date" readonly="is_locked"/>
@@ -73,13 +85,19 @@
                     </group>
                     <notebook>
                         <page string="Purchase Request Line">
-                            <field name="line_ids" readonly="is_locked">
+                            <field name="line_ids">
                                 <list editable="bottom">
+                                    <field name="selected_for_purchase"
+                                           invisible="parent.state != 'approved'"/>
                                     <field name="default_code"/>
-                                    <field name="product_id"/>
-                                    <field name="desc"/>
-                                    <field name="request_eta"/>
-                                    <field name="qty"/>
+                                    <field name="product_id"
+                                           readonly="parent.state != 'draft'"/>
+                                    <field name="desc"
+                                           readonly="parent.state != 'draft'"/>
+                                    <field name="request_eta"
+                                           readonly="parent.state != 'draft'"/>
+                                    <field name="qty"
+                                           readonly="parent.state != 'draft'"/>
                                     <field name="qty_released" readonly="1"/>
                                     <field name="product_uom_id"/>
                                     <field name="stock_on_hand" readonly="1"/>
@@ -140,7 +158,7 @@
                 <field name="name"/>
                 <field name="user_id"/>
                 <field name="department_id"/>
-                <field name="group_category_id"/>
+            <!--<field name="group_category_id"/>-->
                 <filter string="My Requests" name="my_requests" domain="[('user_id', '=', uid)]"/>
                 <separator/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
@@ -167,7 +185,8 @@
         <field name="arch" type="xml">
             <list create="0" delete="0" decoration-muted="state == 'cancel'">
                 <field name="purchase_request_id"/>
-                <field name="request_eta"/>
+                <field name="request_eta"
+                       readonly="parent.state != 'draft'"/>
                 <field name="default_code"/>
                 <field name="product_id"/>
                 <field name="desc"/>
