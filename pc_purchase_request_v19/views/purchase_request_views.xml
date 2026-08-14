@@ -54,11 +54,11 @@
                             class="oe_highlight"
                             invisible="state != 'approved'"/>
 
-                    <button name="action_create_po"
+                <!--<button name="action_create_po"
                             type="object"
                             string="CREATE PO"
                             class="oe_highlight"
-                            invisible="state != 'approved'"/>
+                            invisible="state != 'approved'"/>-->
 
                     <field name="state"
                            widget="statusbar"
