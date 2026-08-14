@@ -322,7 +322,8 @@ class PurchaseRequest(models.Model):
         )
         self.ensure_one()
 
-        self._validate_for_order()
+        for line in selected_lines:
+            line._validate_for_order()
 
         if not selected_lines:
             raise UserError(
