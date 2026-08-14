@@ -1,5 +1,9 @@
+import logging
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class ProductGroupCategory(models.Model):
@@ -173,6 +177,13 @@ class PurchaseRequest(models.Model):
          }
         if protected.intersection(values) and not self.env.context.get("skip_request_lock"):
             if self.filtered(lambda request: request.state != "draft"):
+
+                _logger.warning(
+                    "PURCHASE REQUEST LOCK BLOCKED. VALUES=%s CONTEXT=%s",
+                    values,
+                    self.env.context,
+                )
+
                 raise UserError(_("Only draft purchase requests can be edited."))
         if "state" in values and not self.env.context.get("skip_request_workflow"):
             raise AccessError(_("Use the workflow buttons to change the status."))
