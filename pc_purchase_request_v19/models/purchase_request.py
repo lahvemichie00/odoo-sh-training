@@ -307,6 +307,9 @@ class PurchaseRequest(models.Model):
             confirm=True,
         )
     def _create_purchase_document(self, selected_lines, confirm=False):
+        self = self.with_context(
+            skip_request_lock=True
+        )
         self.ensure_one()
 
         self._validate_for_order()
