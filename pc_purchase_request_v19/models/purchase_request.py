@@ -508,7 +508,13 @@ class PurchaseOrderLine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         lines = super().create(vals_list)
+
         for line in lines:
             if line.purchase_request_line_id:
-                line.purchase_request_line_ids = [(4, line.purchase_request_line_id.id)]
+                line.with_context(
+                    skip_request_lock=True
+                ).purchase_request_line_ids = [
+                    (4, line.purchase_request_line_id.id)
+                ]
+
         return lines
