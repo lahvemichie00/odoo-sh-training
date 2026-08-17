@@ -243,7 +243,12 @@ class PaymentRequestOrder(models.Model):
         if self.state != "approved":
             raise UserError(
                 _("Only approved payment requests can register payment.")
-            )
+        )
+
+        if not self.journal_id:
+            raise UserError(
+                _("Please select a Payment Journal before registering payment.")
+        )
 
         payment = self.env["account.payment"].create(
             {
