@@ -103,6 +103,11 @@ class PaymentRequestOrder(models.Model):
     date_approved = fields.Datetime(string="Approved Date", readonly=True)
     date_rejected = fields.Datetime(string="Rejected Date", readonly=True)
     reject_reason = fields.Text(string="Reject Reason", readonly=True)
+    is_cancelled = fields.Boolean(
+        string="Cancelled After Approval", default=False, copy=False, tracking=True
+    )
+    cancelled_by_id = fields.Many2one("res.users", string="Cancelled By", readonly=True)
+    date_cancelled = fields.Datetime(string="Cancelled Date", readonly=True)
     payment_ids = fields.One2many(
         "account.payment", "payment_request_id", string="Payment Vouchers", readonly=True
     )
@@ -262,9 +267,32 @@ class PaymentRequestOrder(models.Model):
                 "state": "approved",
                 "approved_by_id": user.id,
                 "date_approved": fields.Datetime.now(),
+                "is_cancelled": False,
             }
         )
         self.message_post(body=_("Payment request approved."))
+
+    def action_cancel_payment(self):
+        for request in self:
+            if request.state != "approved":
+                raise UserError(
+                    _("Only approved payment requests can be cancelled.")
+                )
+            request.with_context(skip_request_workflow=True).write(
+                {
+                    "state": "draft",
+                    "is_cancelled": True,
+                    "cancelled_by_id": self.env.user.id,
+                    "date_cancelled": fields.Datetime.now(),
+                    "approved_by_id": False,
+                    "date_approved": False,
+                }
+            )
+            request.message_post(
+                body=_("Payment request cancelled and reset to draft by %(user)s.")
+                % {"user": self.env.user.display_name}
+            )
+        return True
 
     def _approval_matrix_rejected(self, user, reason):
         self.with_context(skip_request_workflow=True).write(
@@ -273,6 +301,7 @@ class PaymentRequestOrder(models.Model):
                 "rejected_by_id": user.id,
                 "date_rejected": fields.Datetime.now(),
                 "reject_reason": reason,
+                    
             }
         )
         self.message_post(

@@ -3,10 +3,11 @@
     <record id="view_payment_request_order_list" model="ir.ui.view">
         <field name="name">payment.request.order.list</field>
         <field name="model">payment.request.order</field>
+        <field name="is_cancelled" invisible="1"/>
         <field name="arch" type="xml">
             <list decoration-info="state == 'waiting_approval'"
                   decoration-success="state in ('approved', 'paid')"
-                  decoration-danger="state == 'rejected'">
+                  decoration-danger="state == 'rejected'or is_cancelled">
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="date_order"/>
@@ -18,7 +19,7 @@
                 <field name="state" widget="badge"
                        decoration-info="state == 'waiting_approval'"
                        decoration-success="state in ('approved', 'paid')"
-                       decoration-danger="state == 'rejected'"/>
+                       decoration-danger="state == 'rejected'or is_cancelled"/>
             </list>
         </field>
     </record>
@@ -40,6 +41,9 @@
                 invisible="state != 'waiting_approval' or not approval_can_current_user"/>
             <button name="action_reset_to_draft" type="object" string="RESET TO DRAFT"
                 invisible="state != 'waiting_approval'"/>
+            <button name="action_cancel_payment" type="object" string="CANCEL PAYMENT"
+                invisible="state != 'approved'"
+                confirm="Are you sure you want to cancel this approved payment request? It will be reset to draft."/>
             <field name="state" widget="statusbar"
                 statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>
                 </header>
