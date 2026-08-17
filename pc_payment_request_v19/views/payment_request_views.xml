@@ -40,7 +40,7 @@
                 groups="pc_payment_request_v19.group_payment_request_approver"
                 invisible="state != 'waiting_approval' or not approval_can_current_user"/>
             <button name="action_reset_to_draft" type="object" string="RESET TO DRAFT"
-                invisible="state != 'waiting_approval'"/>
+                invisible="state not in ('waiting_approval', 'rejected')"/>
             <button name="action_cancel_payment" type="object" string="CANCEL PAYMENT"
                 invisible="state != 'approved'"
                 confirm="Are you sure you want to cancel this approved payment request? It will be reset to draft."/>
