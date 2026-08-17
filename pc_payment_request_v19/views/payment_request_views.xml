@@ -49,9 +49,15 @@
                  
                     <button name="action_toggle_lock"
                             type="object"
-                            t-att-string="lock_button_label"
+                            string="UNLOCK"
                             class="oe_highlight"
-                            invisible="user_request_id != uid or state not in ('approved','rejected')"/>
+                            invisible="not is_locked or user_request_id != uid or state not in ('approved','rejected')"/>
+
+                    <button name="action_toggle_lock"
+                            type="object"
+                            string="LOCK"
+                            class="oe_highlight"
+                            invisible="is_locked or user_request_id != uid or state not in ('approved','rejected')"/>
 
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>
@@ -61,7 +67,6 @@
                     <field name="approval_is_approved" invisible="1"/>
                     <field name="company_currency_id" invisible="1"/>
                     <field name="is_locked" invisible="1"/>
-                    <field name="lock_button_label" invisible="1"/>
                     <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
                     <group>
                         <group>

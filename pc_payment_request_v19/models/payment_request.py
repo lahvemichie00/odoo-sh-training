@@ -101,11 +101,6 @@ class PaymentRequestOrder(models.Model):
         tracking=True,
     )
 
-    lock_button_label = fields.Char(
-        string="Lock Button Label",
-        compute="_compute_lock_button_label",
-    )
-
     submitted_by_id = fields.Many2one("res.users", string="Submitted By", readonly=True)
     approved_by_id = fields.Many2one("res.users", string="Approved By", readonly=True)
     rejected_by_id = fields.Many2one("res.users", string="Rejected By", readonly=True)
@@ -188,14 +183,6 @@ class PaymentRequestOrder(models.Model):
                     lambda payment: payment.state not in ("draft", "cancel", "canceled")
                 )
             )
-
-    @api.depends("is_locked")
-    def _compute_lock_button_label(self):
-        for request in self:
-            if request.is_locked:
-                request.lock_button_label = _("UNLOCK")
-            else:
-                request.lock_button_label = _("LOCK")
 
     @api.constrains("line_ids", "amount_lines_total")
     def _check_amount(self):
