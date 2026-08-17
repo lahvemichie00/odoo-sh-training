@@ -232,6 +232,25 @@ class PaymentRequestOrder(models.Model):
             request.message_post(body=_("Payment request submitted for approval."))
         return True
 
+    def action_reset_to_draft(self):
+        for request in self:
+            if request.state != "waiting_approval":
+                raise UserError(
+                    _("Only payment requests waiting for approval can be reset to draft.")
+                )
+            request.with_context(skip_request_workflow=True).write(
+                {
+                    "state": "draft",
+                    "submitted_by_id": False,
+                    "date_submitted": False,
+                }
+            )
+            request.message_post(
+                body=_("Payment request reset to draft by %(user)s.")
+                % {"user": self.env.user.display_name}
+            )
+        return True
+
     def action_approve(self):
         if self.filtered(lambda request: request.state != "waiting_approval"):
             raise UserError(_("The payment request is not waiting for approval."))
