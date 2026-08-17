@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <list decoration-info="state == 'waiting_approval'"
                   decoration-success="state in ('approved', 'paid')"
-                  decoration-danger="state == 'rejected' or is_cancelled">
+                  decoration-danger="state == 'rejected'">
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="date_order"/>
@@ -15,11 +15,10 @@
                 <field name="currency_id"/>
                 <field name="amount_lines_total" sum="Total"/>
                 <field name="user_request_id"/>
-                <field name="is_cancelled" invisible="1"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'waiting_approval'"
                        decoration-success="state in ('approved', 'paid')"
-                       decoration-danger="state == 'rejected' or is_cancelled"/>
+                       decoration-danger="state == 'rejected'"/>
             </list>
         </field>
     </record>
@@ -41,9 +40,6 @@
                 invisible="state != 'waiting_approval' or not approval_can_current_user"/>
             <button name="action_reset_to_draft" type="object" string="RESET TO DRAFT"
                 invisible="state not in ('waiting_approval', 'rejected')"/>
-            <button name="action_cancel_payment" type="object" string="CANCEL PAYMENT"
-                invisible="state != 'approved'"
-                confirm="Are you sure you want to cancel this approved payment request? It will be reset to draft."/>
             <field name="state" widget="statusbar"
                 statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>
                 </header>
