@@ -37,7 +37,12 @@
                             invisible="state != 'waiting_approval' or not approval_can_current_user"/>
                     <button name="action_open_approval_reject_wizard" type="object" string="REJECT"
                             groups="pc_payment_request_v19.group_payment_request_approver"
-                            invisible="state != 'waiting_approval' or not approval_can_current_user"/>
+                            invisible="state != 'waiting_approval' or not approval_can_current_user"/> 
+                    <button name="action_register_payment"
+                            type="object"
+                            string="REGISTER PAYMENT"
+                            class="oe_highlight"
+                            invisible="state != 'approved'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>
                 </header>
