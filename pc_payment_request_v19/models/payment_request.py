@@ -237,6 +237,35 @@ class PaymentRequestOrder(models.Model):
             raise UserError(_("The payment request is not waiting for approval."))
         return self._approval_action_approve()
 
+    def action_register_payment(self):
+        self.ensure_one()
+
+        if self.state != "approved":
+            raise UserError(
+                _("Only approved payment requests can register payment.")
+            )
+
+        payment = self.env["account.payment"].create(
+            {
+                "payment_type": "outbound",
+                "partner_type": "supplier",
+                "partner_id": self.partner_id.id,
+                "amount": self.amount_lines_total,
+                "currency_id": self.currency_id.id,
+                "journal_id": self.journal_id.id,
+                "payment_request_id": self.id,
+                "date": fields.Date.today(),
+            }
+        )
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Payment"),
+            "res_model": "account.payment",
+            "view_mode": "form",
+            "res_id": payment.id,
+        }
+
     def _approval_matrix_approved(self, user):
         self.with_context(skip_request_workflow=True).write(
             {
