@@ -338,7 +338,7 @@ class PurchaseRequest(models.Model):
                         "product_id": line.product_id.id,
                         "name": line.desc or line.product_id.display_name,
                         "product_qty": line.qty,
-                        "product_uom": line.product_uom_id.id,
+                        "product_uom_id": line.product_uom_id.id,
                         "date_planned": fields.Datetime.now(),
                         "purchase_request_line_id": line.id,
                     },
