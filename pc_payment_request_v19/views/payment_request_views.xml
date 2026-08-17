@@ -46,18 +46,12 @@
                             string="REGISTER PAYMENT"
                             class="oe_highlight"
                             invisible="state != 'approved'"/>
-
-                    <button name="action_unlock"
+                 
+                    <button name="action_toggle_lock"
                             type="object"
-                            string="UNLOCK"
+                            string="LOCK / UNLOCK"
                             class="oe_highlight"
-                            invisible="state not in ('approved','rejected') or user_request_id != uid"/>
-                   
-                    <button name="action_lock"
-                            type="object"
-                            string="LOCK &amp; RESUBMIT"
-                            class="oe_highlight"
-                            invisible="is_locked == True or user_request_id != uid or state not in ('approved','rejected')"/>
+                            invisible="user_request_id != uid or state not in ('approved','rejected')"/>
 
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>

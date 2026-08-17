@@ -243,71 +243,52 @@ class PaymentRequestOrder(models.Model):
 
         return True 
 
-    def action_unlock(self):
+    def action_toggle_lock(self):
         for request in self:
             if request.user_request_id != self.env.user:
                 raise UserError(
-                    _("Only the requester can unlock this payment request.")
-                )
-
-            if request.state not in ("approved", "rejected"):
-                raise UserError(
-                    _("Only approved or rejected requests can be unlocked.")
-                )
-
-            request.write(
-                {
-                    "is_locked": False,
-                }
-            )
-
-            request.message_post(
-                body=_(
-                    "Payment request unlocked by %(user)s for correction."
-                )
-                % {
-                    "user": self.env.user.name,
-                }
-            )
-
-        return True
-
-    def action_lock(self):
-        for request in self:
-            if request.user_request_id != self.env.user:
-                raise UserError(
-                    _("Only the requester can lock this payment request.")
+                    _("Only the requester can lock or unlock this payment request.")
                 )
 
             if request.is_locked:
-                raise UserError(
-                    _("Payment request is already locked.")
+                request.write({
+                    "is_locked": False,
+                })
+
+                request.message_post(
+                    body=_(
+                        "Payment request unlocked by %(user)s for correction."
+                    )
+                    % {
+                        "user": self.env.user.name,
+                    }
                 )
 
-            request._approval_refresh(replace=True)
+            else:
+                request._approval_refresh(replace=True)
 
-            request.with_context(skip_request_workflow=True).write(
-                {
-                    "state": "waiting_approval",
-                    "is_locked": True,
-                    "submitted_by_id": self.env.user.id,
-                    "date_submitted": fields.Datetime.now(),
-                    "approved_by_id": False,
-                    "date_approved": False,
-                    "rejected_by_id": False,
-                    "date_rejected": False,
-                    "reject_reason": False,
-                }
-            )
-
-            request.message_post(
-                body=_(
-                    "Payment request locked and resubmitted for approval by %(user)s."
+                request.with_context(skip_request_workflow=True).write(
+                    {
+                        "state": "waiting_approval",
+                        "is_locked": True,
+                        "submitted_by_id": self.env.user.id,
+                        "date_submitted": fields.Datetime.now(),
+                        "approved_by_id": False,
+                        "date_approved": False,
+                        "rejected_by_id": False,
+                        "date_rejected": False,
+                        "reject_reason": False,
+                    }
                 )
-                % {
-                    "user": self.env.user.name,
-                }
-            )
+
+                request.message_post(
+                    body=_(
+                        "Payment request locked and sent for approval by %(user)s."
+                    )
+                    % {
+                        "user": self.env.user.name,
+                    }
+                )
 
         return True
 
