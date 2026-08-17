@@ -3,11 +3,10 @@
     <record id="view_payment_request_order_list" model="ir.ui.view">
         <field name="name">payment.request.order.list</field>
         <field name="model">payment.request.order</field>
-        <field name="is_cancelled" invisible="1"/>
         <field name="arch" type="xml">
             <list decoration-info="state == 'waiting_approval'"
                   decoration-success="state in ('approved', 'paid')"
-                  decoration-danger="state == 'rejected'or is_cancelled">
+                  decoration-danger="state == 'rejected' or is_cancelled">
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="date_order"/>
@@ -16,10 +15,11 @@
                 <field name="currency_id"/>
                 <field name="amount_lines_total" sum="Total"/>
                 <field name="user_request_id"/>
+                <field name="is_cancelled" invisible="1"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'waiting_approval'"
                        decoration-success="state in ('approved', 'paid')"
-                       decoration-danger="state == 'rejected'or is_cancelled"/>
+                       decoration-danger="state == 'rejected' or is_cancelled"/>
             </list>
         </field>
     </record>
