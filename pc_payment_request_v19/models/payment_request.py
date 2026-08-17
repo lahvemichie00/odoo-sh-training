@@ -239,7 +239,7 @@ class PaymentRequestOrder(models.Model):
 
     def action_reset_to_draft(self):
         for request in self:
-            if request.state != "waiting_approval":
+            if request.state not in ("waiting_approval", "rejected"):
                 raise UserError(
                     _("Only payment requests waiting for approval can be reset to draft.")
                 )
