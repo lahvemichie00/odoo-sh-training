@@ -317,9 +317,6 @@ class PurchaseRequest(models.Model):
             confirm=True,
         )
     def _create_purchase_document(self, selected_lines, confirm=False):
-        self = self.with_context(
-            skip_request_lock=True
-        )
         self.ensure_one()
 
         for line in selected_lines:
@@ -328,43 +325,37 @@ class PurchaseRequest(models.Model):
         if not selected_lines:
             raise UserError(
                 _("No selected items found.")
-            )
-
-        order = self.env["purchase.order"].create(
-            {
-                "company_id": self.company_id.id,
-                "origin": self.name,
-            }
         )
 
+        order_lines = []
+
         for line in selected_lines:
-            po_line = self.env["purchase.order.line"].create(
-                {
-                    "order_id": order.id,
-                    "product_id": line.product_id.id,
-                    "name": line.desc or line.product_id.display_name,
-                    "product_qty": line.qty,
-                    "product_uom": line.product_uom_id.id,
-                    "date_planned": fields.Datetime.now(),
-                    "purchase_request_line_id": line.id,
-                }
+            order_lines.append(
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": line.product_id.id,
+                        "name": line.desc or line.product_id.display_name,
+                        "product_qty": line.qty,
+                        "product_uom": line.product_uom_id.id,
+                        "date_planned": fields.Datetime.now(),
+                        "purchase_request_line_id": line.id,
+                    },
+                )
             )
-
-            line.with_context(
-                 skip_request_lock=True
-            ).purchase_line_ids = [
-                (4, po_line.id)
-            ]
-
-        if confirm:
-            order.button_confirm()
 
         return {
             "type": "ir.actions.act_window",
-            "name": _("Purchase Order"),
+            "name": _("Request for Quotation"),
             "res_model": "purchase.order",
             "view_mode": "form",
-            "res_id": order.id,
+            "target": "current",
+            "context": {
+                "default_origin": self.name,
+                "default_company_id": self.company_id.id,
+                "default_order_line": order_lines,
+            },
         }
 
 class PurchaseRequestLine(models.Model):
