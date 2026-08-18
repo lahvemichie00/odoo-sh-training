@@ -8,6 +8,7 @@
     ],
     "data": [
         "security/ir.model.access.csv",
+        "views/purchase_report_views.xml",
         "views/purchase_order_period_views.xml",
     ],
     "installable": True,
