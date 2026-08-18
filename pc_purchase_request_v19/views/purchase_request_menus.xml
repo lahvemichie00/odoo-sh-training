@@ -13,10 +13,9 @@
     <!-- Group Categories under Products -->
     <menuitem id="menu_product_group_category"
               name="Group Categories"
-              parent="product.menu_product_root"
+              parent="purchase.menu_purchase_products"
               action="action_product_group_category"
-              sequence="50"
+              sequence="30"
               groups="purchase.group_purchase_user"/>
-
 
 </odoo>
