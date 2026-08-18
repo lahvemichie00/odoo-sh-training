@@ -40,23 +40,10 @@
 
 
     <record id="action_purchase_order_period" model="ir.actions.act_window">
-
-        <field name="name">
-            Purchase Order Period
-        </field>
-
-        <field name="res_model">
-            purchase.order.period
-        </field>
-
-        <field name="view_mode">
-            form
-        </field>
-
-        <field name="target">
-            new
-        </field>
-
+        <field name="name">Purchase Order Period</field>
+        <field name="res_model">purchase.order.period</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
     </record>
 
 
