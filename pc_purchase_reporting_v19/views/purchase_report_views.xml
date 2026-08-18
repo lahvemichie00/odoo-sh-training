@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <record id="action_purchase_analysis" model="ir.actions.act_window">
+        <field name="name">Purchase Analysis</field>
+        <field name="res_model">purchase.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+    </record>
+
+
+    <menuitem
+        id="menu_purchase_analysis"
+        name="Purchase Analysis"
+        parent="purchase.menu_purchase_report"
+        action="action_purchase_analysis"
+        sequence="1"/>
+
 </odoo>

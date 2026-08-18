@@ -50,8 +50,8 @@
     <menuitem
         id="menu_purchase_order_period"
         name="Purchase Order Period"
-        parent="purchase.purchase_report_main"
+        parent="menu_purchase_analysis"
         action="action_purchase_order_period"
-        sequence="20"/>
+        sequence="10"/>
 
 </odoo>
