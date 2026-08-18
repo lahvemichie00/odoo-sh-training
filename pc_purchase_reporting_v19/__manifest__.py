@@ -6,7 +6,6 @@
 
     "depends": [
         "purchase",
-        "purchase_enterprise",
     ],
 
     "data": [
