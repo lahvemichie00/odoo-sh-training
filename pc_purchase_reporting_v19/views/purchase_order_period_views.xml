@@ -39,6 +39,7 @@
     </record>
 
 
+    <!-- Purchase Order Period -->
     <record id="action_purchase_order_period" model="ir.actions.act_window">
         <field name="name">Purchase Order Period</field>
         <field name="res_model">purchase.order.period</field>
@@ -47,11 +48,30 @@
     </record>
 
 
+    <!-- Incoming Order Period (temporary use same wizard first) -->
+    <record id="action_incoming_order_period" model="ir.actions.act_window">
+        <field name="name">Incoming Order Period</field>
+        <field name="res_model">purchase.order.period</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+
+    <!-- Menus -->
     <menuitem
         id="menu_purchase_order_period"
         name="Purchase Order Period"
-        parent="menu_purchase_analysis"
+        parent="purchase.purchase_report_main"
         action="action_purchase_order_period"
         sequence="10"/>
+
+
+    <menuitem
+        id="menu_incoming_order_period"
+        name="Incoming Order Period"
+        parent="purchase.purchase_report_main"
+        action="action_incoming_order_period"
+        sequence="20"/>
+
 
 </odoo>
