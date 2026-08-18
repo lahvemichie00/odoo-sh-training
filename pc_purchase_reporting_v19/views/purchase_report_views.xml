@@ -11,7 +11,7 @@
     <menuitem
         id="menu_purchase_analysis"
         name="Purchase Analysis"
-        parent="purchase.menu_purchase_report"
+        parent="purchase.purchase_report_main"
         action="action_purchase_analysis"
         sequence="1"/>
 
