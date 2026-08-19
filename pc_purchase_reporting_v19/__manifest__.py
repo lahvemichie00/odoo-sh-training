@@ -19,7 +19,10 @@
     "assets": {
         "web.assets_backend": [
             "pc_purchase_reporting_v19/static/src/components/purchase_reporting_dashboard.js",
+            "pc_purchase_reporting_v19/static/src/components/purchase_chart.js",
+
             "pc_purchase_reporting_v19/static/src/xml/purchase_reporting_dashboard.xml",
+            "pc_purchase_reporting_v19/static/src/xml/purchase_chart.xml",
         ],
     },
 

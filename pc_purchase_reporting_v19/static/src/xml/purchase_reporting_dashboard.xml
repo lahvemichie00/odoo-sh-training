@@ -19,7 +19,6 @@
 
 
             <div class="col-md-3">
-
                 <div class="card shadow-sm p-3">
 
                     <h5>
@@ -31,13 +30,11 @@
                     </h2>
 
                 </div>
-
             </div>
 
 
 
             <div class="col-md-3">
-
                 <div class="card shadow-sm p-3">
 
                     <h5>
@@ -49,13 +46,11 @@
                     </h2>
 
                 </div>
-
             </div>
 
 
 
             <div class="col-md-3">
-
                 <div class="card shadow-sm p-3">
 
                     <h5>
@@ -67,13 +62,11 @@
                     </h2>
 
                 </div>
-
             </div>
 
 
 
             <div class="col-md-3">
-
                 <div class="card shadow-sm p-3">
 
                     <h5>
@@ -85,11 +78,47 @@
                     </h2>
 
                 </div>
-
             </div>
 
 
         </div>
+
+
+
+
+
+        <!-- PURCHASE TREND CHART -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-body">
+
+
+                <h3>
+                    📈 Purchase Trend
+                </h3>
+
+
+                <p>
+                    Purchase amount trend by period.
+                </p>
+
+
+                <div class="p-4">
+
+                    <PurchaseChart
+                        labels="state.chart_labels"
+                        values="state.chart_values"
+                    />
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
 
 
 
