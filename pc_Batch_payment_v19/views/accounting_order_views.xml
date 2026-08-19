@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_batch_payment_form_approval" model="ir.ui.view">
+        <field name="name">account.batch.payment.form.approval</field>
+        <field name="model">account.batch.payment</field>
+        <field name="inherit_id" ref="account_batch_payment.view_batch_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_submit_for_approval" string="Submit for Approval" type="object"
+                            class="oe_highlight" invisible="approval_state not in ('new', 'rejected')"/>
+                    <button name="action_approve" string="Approve" type="object"
+                            class="oe_highlight" invisible="approval_state != 'to_approve'"
+                            groups="group_batch_payment_approver"/>
+                    <button name="action_reset_to_new" string="Reset to New" type="object"
+                            invisible="approval_state not in ('to_approve', 'rejected')"/>
+                    <field name="approval_state" widget="statusbar"
+                           statusbar_visible="new,to_approve,approved,rejected"/>
+                </header>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_state"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_batch_payment_tree_approval" model="ir.ui.view">
+        <field name="name">account.batch.payment.tree.approval</field>
+        <field name="model">account.batch.payment</field>
+        <field name="inherit_id" ref="account_batch_payment.view_batch_payment_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_state"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>s

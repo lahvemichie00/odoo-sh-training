@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_batch_payment_vendor" model="ir.actions.act_window">
+        <field name="name">Batch Payments</field>
+        <field name="res_model">account.batch.payment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('batch_type', '=', 'outbound')]</field>
+    </record>
+
+    <menuitem id="menu_batch_payment_vendor" name="Batch Payment"
+              parent="account.menu_finance_payables"
+              action="action_batch_payment_vendor" sequence="20"
+              groups="group_batch_payment_user"/>
+</odoo>
