@@ -31,14 +31,8 @@ class AccountBatchPayment(models.Model):
     partner_ids = fields.Many2many(
         "res.partner",
         string="Vendor Name",
-        compute="_compute_partner_ids",
-        store=True,
+        domain=[("supplier_rank", ">", 0)],
     )
-
-    @api.depends("payment_ids.partner_id")
-    def _compute_partner_ids(self):
-        for batch in self:
-            batch.partner_ids = batch.payment_ids.mapped("partner_id")
 
     @api.model_create_multi
     def create(self, vals_list):
