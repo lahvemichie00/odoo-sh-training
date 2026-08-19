@@ -12,7 +12,7 @@
         id="menu_purchase_analysis"
         name="Purchase Analysis"
         parent="purchase.purchase_report_main"
-        action="action_purchase_analysis"
+        action="action_purchase_reporting_dashboard"
         sequence="1"/>
 
 </odoo>
