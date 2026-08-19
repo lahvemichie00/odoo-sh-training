@@ -6,84 +6,86 @@
 
     <div class="o_purchase_reporting_dashboard p-4">
 
-        <h2>
+        <h1 class="mb-4">
             Purchase Analysis
-        </h2>
+        </h1>
 
 
-        <div class="row mt-4">
+        <!-- Purchase Analysis -->
+        <div class="card shadow-sm mb-4">
 
+            <div class="card-body">
 
-            <div class="col-md-4">
-                <div class="card p-4 shadow-sm">
+                <h3>
+                    📊 Purchase Analysis
+                </h3>
 
-                    <h3>
-                        📊 Purchase Analysis
-                    </h3>
+                <p>
+                    Analyse purchase performance using Pivot, Graph and List view.
+                </p>
 
-                    <p>
-                        Pivot / Graph / List Analysis
-                    </p>
-
-                    <button
-                        class="btn btn-primary"
-                        t-on-click="openPurchaseAnalysis">
-                        Open Analysis
-                    </button>
-
-                </div>
-            </div>
-
-
-
-            <div class="col-md-4">
-
-                <div class="card p-4 shadow-sm">
-
-                    <h3>
-                        📄 Purchase Order Period
-                    </h3>
-
-                    <p>
-                        Generate Purchase Order Report
-                    </p>
-
-                    <button
-                        class="btn btn-primary"
-                        t-on-click="openPurchaseOrderPeriod">
-                        Open
-                    </button>
-
-                </div>
+                <button
+                    class="btn btn-primary"
+                    t-on-click="openPurchaseAnalysis">
+                    Open Analysis
+                </button>
 
             </div>
-
-
-
-            <div class="col-md-4">
-
-                <div class="card p-4 shadow-sm">
-
-                    <h3>
-                        📦 Incoming Order Period
-                    </h3>
-
-                    <p>
-                        Generate Incoming Report
-                    </p>
-
-                    <button
-                        class="btn btn-primary"
-                        t-on-click="openIncomingOrderPeriod">
-                        Open
-                    </button>
-
-                </div>
-
-            </div>
-
 
         </div>
+
+
+
+        <!-- Purchase Order Period -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h3>
+                    📄 Purchase Order Period
+                </h3>
+
+                <p>
+                    Generate Purchase Order report by period.
+                </p>
+
+                <button
+                    class="btn btn-primary"
+                    t-on-click="openPurchaseOrderPeriod">
+                    Open Purchase Order Period
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Incoming Order Period -->
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h3>
+                    📦 Incoming Order Period
+                </h3>
+
+                <p>
+                    Generate Incoming Order report by period.
+                </p>
+
+                <button
+                    class="btn btn-primary"
+                    t-on-click="openIncomingOrderPeriod">
+                    Open Incoming Order Period
+                </button>
+
+            </div>
+
+        </div>
+
 
     </div>
 
