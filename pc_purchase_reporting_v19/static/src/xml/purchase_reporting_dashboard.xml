@@ -18,43 +18,58 @@
         <div class="row mb-4">
 
 
+            <!-- Total Purchased -->
+
             <div class="col-md-3">
-                <div class="card shadow-sm p-3">
+
+                <div class="card shadow-sm p-3 border-start border-primary border-4">
 
                     <h5>
-                        Total Purchased
+                        💰 Total Purchased
                     </h5>
 
                     <h2>
-                        <t t-esc="state.total_amount"/>
+                        <t t-esc="formatCurrency(state.total_amount)"/>
                     </h2>
 
                 </div>
+
             </div>
 
 
 
+
+
+            <!-- Untaxed Total -->
+
             <div class="col-md-3">
-                <div class="card shadow-sm p-3">
+
+                <div class="card shadow-sm p-3 border-start border-success border-4">
 
                     <h5>
-                        Untaxed Total
+                        📑 Untaxed Total
                     </h5>
 
                     <h2>
-                        <t t-esc="state.untaxed_amount"/>
+                        <t t-esc="formatCurrency(state.untaxed_amount)"/>
                     </h2>
 
                 </div>
+
             </div>
 
 
 
+
+
+            <!-- Orders -->
+
             <div class="col-md-3">
-                <div class="card shadow-sm p-3">
+
+                <div class="card shadow-sm p-3 border-start border-warning border-4">
 
                     <h5>
-                        Orders
+                        🛒 Orders
                     </h5>
 
                     <h2>
@@ -62,22 +77,29 @@
                     </h2>
 
                 </div>
+
             </div>
 
 
 
+
+
+            <!-- Average Order -->
+
             <div class="col-md-3">
-                <div class="card shadow-sm p-3">
+
+                <div class="card shadow-sm p-3 border-start border-info border-4">
 
                     <h5>
-                        Average Order
+                        📊 Average Order
                     </h5>
 
                     <h2>
-                        <t t-esc="state.average_order"/>
+                        <t t-esc="formatCurrency(state.average_order)"/>
                     </h2>
 
                 </div>
+
             </div>
 
 
@@ -87,9 +109,13 @@
 
 
 
+
+
         <!-- PURCHASE TREND CHART -->
 
+
         <div class="card shadow-sm mb-4">
+
 
             <div class="card-body">
 
@@ -106,15 +132,18 @@
 
                 <div class="p-4">
 
+
                     <PurchaseChart
                         labels="state.chart_labels"
                         values="state.chart_values"
                     />
 
+
                 </div>
 
 
             </div>
+
 
         </div>
 
@@ -122,7 +151,97 @@
 
 
 
+
+
+
+        <!-- PURCHASE BY VENDOR CHART -->
+
+
+        <div class="card shadow-sm mb-4">
+
+
+            <div class="card-body">
+
+
+                <h3>
+                    🏢 Purchase by Vendor
+                </h3>
+
+
+                <p>
+                    Purchase amount analysis by vendor.
+                </p>
+
+
+                <div class="p-4">
+
+
+                    <PurchaseVendorChart
+                        labels="state.vendor_labels"
+                        values="state.vendor_values"
+                    />
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+
+
+
+        <!-- PURCHASE BY CATEGORY CHART -->
+
+
+        <div class="card shadow-sm mb-4">
+
+
+            <div class="card-body">
+
+
+                <h3>
+                    📦 Purchase by Category
+                </h3>
+
+
+                <p>
+                    Purchase amount analysis by product category.
+                </p>
+
+
+                <div class="p-4">
+
+
+                    <PurchaseCategoryChart
+                        labels="state.category_labels"
+                        values="state.category_values"
+                    />
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+
+
+
         <!-- Purchase Analysis -->
+
 
         <div class="card shadow-sm mb-4">
 
@@ -153,6 +272,9 @@
 
 
         </div>
+
+
+
 
 
 
@@ -190,6 +312,9 @@
 
 
         </div>
+
+
+
 
 
 
