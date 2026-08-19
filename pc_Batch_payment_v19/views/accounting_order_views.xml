@@ -22,34 +22,33 @@
                            statusbar_visible="new,to_approve,approved,rejected"/>
                 </header>
             </xpath>
+            <xpath expr="//field[@name='state']" position="replace"/>
             <xpath expr="//field[@name='journal_id']" position="after">
                 <field name="partner_ids" widget="many2many_tags"/>
             </xpath>
-            <xpath expr="//sheet" position="inside">
+            <xpath expr="//notebook" position="inside">
                 <field name="approval_can_current_user" invisible="1"/>
                 <field name="approval_is_approved" invisible="1"/>
-                <notebook>
-                    <page string="Approvals">
-                        <field name="approval_document_ids" readonly="1">
-                            <list create="0" delete="0">
-                                <field name="res_model"/>
-                                <field name="res_name"/>
-                                <field name="matrix_id"/>
-                                <field name="approver_seq"/>
-                                <field name="approver_ids" widget="many2many_tags"/>
-                                <field name="minimum_approved"/>
-                                <field name="approved_by_ids" widget="many2many_tags"/>
-                                <field name="rejected_by_ids" widget="many2many_tags"/>
-                                <field name="is_approved"/>
-                            </list>
-                        </field>
-                        <group>
-                            <field name="approval_is_approved" string="Approved" readonly="1"/>
-                            <button name="action_fetch_matrix" type="object" string="Fetch Matrix"
-                                    groups="group_batch_payment_manager"/>
-                        </group>
-                    </page>
-                </notebook>
+                <page string="Approvals" invisible="approval_state == 'new'">
+                    <field name="approval_document_ids" readonly="1">
+                        <list create="0" delete="0">
+                            <field name="res_model"/>
+                            <field name="res_name"/>
+                            <field name="matrix_id"/>
+                            <field name="approver_seq"/>
+                            <field name="approver_ids" widget="many2many_tags"/>
+                            <field name="minimum_approved"/>
+                            <field name="approved_by_ids" widget="many2many_tags"/>
+                            <field name="rejected_by_ids" widget="many2many_tags"/>
+                            <field name="is_approved"/>
+                        </list>
+                    </field>
+                    <group>
+                        <field name="approval_is_approved" string="Approved" readonly="1"/>
+                        <button name="action_fetch_matrix" type="object" string="Fetch Matrix"
+                                groups="group_batch_payment_manager"/>
+                    </group>
+                </page>
             </xpath>
         </field>
     </record>
