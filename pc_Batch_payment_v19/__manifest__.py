@@ -7,11 +7,10 @@
     "license": "LGPL-3",
     "depends": ["account_batch_payment", "mail", "pc_approval_matrix_v19"],
     "data": [
-        "security/accounting_security.xml",
-        "security/ir.model.access.csv",
-        "views/accounting_order_views.xml",
-        "views/accounting_menus.xml",
-    ],
+    "security/accounting_security.xml",
+    "security/ir.model.access.csv",
+    "views/accounting_order_views.xml",
+],
     "installable": True,
     "application": False,
 }
