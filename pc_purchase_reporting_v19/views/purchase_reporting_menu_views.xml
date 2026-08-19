@@ -2,8 +2,4 @@
 
 <odoo>
 
-    <record id="purchase.purchase_report_main" model="ir.ui.menu">
-        <field name="active" eval="False"/>
-    </record>
-
 </odoo>
