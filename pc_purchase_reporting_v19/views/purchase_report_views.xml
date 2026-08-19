@@ -17,7 +17,7 @@
 
                 <field name="date_order" interval="day"/>
 
-                <field name="price_subtotal" type="measure"/>
+                <field name="untaxed_total" type="measure"/>
 
             </graph>
 
@@ -25,51 +25,59 @@
 
     </record>
 
-
-
-
-
     <!-- Purchase Analysis Pivot View -->
 
     <record id="view_purchase_report_pivot" model="ir.ui.view">
+
 
         <field name="name">purchase.report.pivot</field>
 
         <field name="model">purchase.report</field>
 
+
         <field name="arch" type="xml">
+
 
             <pivot string="Purchase Analysis">
 
-                <field name="product_categ_id" type="row"/>
 
-                <field name="price_subtotal" type="measure"/>
+                <field name="category_id" type="row"/>
+
+
+                <field name="nbr_lines" type="measure"/>
+
+
+                <field name="qty_ordered" type="measure"/>
+
+
+                <field name="untaxed_total" type="measure"/>
+
 
                 <field name="price_total" type="measure"/>
 
-                <field name="product_qty" type="measure"/>
 
             </pivot>
 
+
         </field>
+
 
     </record>
 
+    <!-- Purchase Analysis Search -->
 
-
-
-
-
-
-    <!-- Purchase Analysis Search View -->
 
     <record id="view_purchase_report_search" model="ir.ui.view">
 
+
         <field name="name">purchase.report.search</field>
+
 
         <field name="model">purchase.report</field>
 
+
         <field name="arch" type="xml">
+
 
             <search string="Purchase Analysis">
 
@@ -78,7 +86,7 @@
 
                 <field name="product_id"/>
 
-                <field name="product_categ_id"/>
+                <field name="category_id"/>
 
                 <field name="date_order"/>
 
@@ -88,8 +96,6 @@
                     string="Confirmed Orders"
                     name="confirmed"
                     domain="[('state','=','purchase')]"/>
-
-
 
 
                 <group expand="0" string="Group By">
@@ -104,7 +110,7 @@
                     <filter
                         string="Product Category"
                         name="category"
-                        context="{'group_by':'product_categ_id'}"/>
+                        context="{'group_by':'category_id'}"/>
 
 
                     <filter
@@ -118,31 +124,31 @@
 
             </search>
 
+
         </field>
 
+
     </record>
-
-
-
-
-
-
 
     <!-- Purchase Analysis Action -->
 
 
     <record id="action_purchase_analysis" model="ir.actions.act_window">
 
+
         <field name="name">Purchase Analysis</field>
+
 
         <field name="res_model">purchase.report</field>
 
+
         <field name="view_mode">graph,pivot</field>
+
 
         <field name="search_view_id" ref="view_purchase_report_search"/>
 
-    </record>
 
+    </record>
 
     <!-- Purchase Analysis Menu -->
 
@@ -153,6 +159,5 @@
         parent="purchase.purchase_report_main"
         action="action_purchase_analysis"
         sequence="1"/>
-
 
 </odoo>
