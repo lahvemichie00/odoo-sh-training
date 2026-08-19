@@ -28,6 +28,18 @@ class AccountBatchPayment(models.Model):
     date_rejected = fields.Datetime(string="Rejected Date", readonly=True)
     reject_reason = fields.Text(string="Reject Reason", readonly=True)
 
+    partner_ids = fields.Many2many(
+        "res.partner",
+        string="Vendor Name",
+        compute="_compute_partner_ids",
+        store=True,
+    )
+
+    @api.depends("payment_ids.partner_id")
+    def _compute_partner_ids(self):
+        for batch in self:
+            batch.partner_ids = batch.payment_ids.mapped("partner_id")
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
