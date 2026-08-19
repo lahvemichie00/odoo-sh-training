@@ -29,6 +29,7 @@
         <field name="arch" type="xml">
             <form string="Payment Request">
                 <header>
+<<<<<<< HEAD
             <button name="action_submit" type="object" string="SUBMIT"
                 class="oe_highlight" invisible="state != 'draft'"/>
             <button name="action_approve" type="object" string="APPROVE"
@@ -42,6 +43,40 @@
                 invisible="state not in ('waiting_approval', 'rejected')"/>
             <field name="state" widget="statusbar"
                 statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>
+=======
+                    <button name="action_submit" type="object" string="SUBMIT"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+
+                    <button name="action_approve" type="object" string="APPROVE"
+                            class="oe_highlight"
+                            groups="pc_payment_request_v19.group_payment_request_approver"
+                            invisible="state != 'waiting_approval' or not approval_can_current_user"/>
+
+                    <button name="action_open_approval_reject_wizard" type="object" string="REJECT"
+                            groups="pc_payment_request_v19.group_payment_request_approver"
+                            invisible="state != 'waiting_approval' or not approval_can_current_user"/>
+
+                    <button name="action_register_payment"
+                            type="object"
+                            string="REGISTER PAYMENT"
+                            class="oe_highlight"
+                            invisible="state != 'approved'"/>
+                 
+                    <button name="action_toggle_lock"
+                            type="object"
+                            string="UNLOCK"
+                            class="oe_highlight"
+                            invisible="not is_locked or user_request_id != uid or state not in ('approved','rejected')"/>
+
+                    <button name="action_toggle_lock"
+                            type="object"
+                            string="LOCK"
+                            class="oe_highlight"
+                            invisible="is_locked or user_request_id != uid or state not in ('approved','rejected')"/>
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,waiting_approval,approved,paid,rejected"/>
+>>>>>>> origin/SH-test-2
                 </header>
                 <sheet>
                     <field name="approval_can_current_user" invisible="1"/>

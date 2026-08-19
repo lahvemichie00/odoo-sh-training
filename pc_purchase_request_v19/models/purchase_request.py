@@ -1,15 +1,9 @@
+import logging
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
-
-class ProductGroupCategory(models.Model):
-    _name = "product.group.category"
-    _description = "Group Category of Product"
-    _order = "name"
-
-    name = fields.Char(required=True)
-    active = fields.Boolean(default=True)
-
+_logger = logging.getLogger(__name__)
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
@@ -51,7 +45,13 @@ class PurchaseRequest(models.Model):
         store=True,
         readonly=True,
     )
-    is_asset = fields.Boolean(string="Asset")
+
+    group_category_id = fields.Many2one(
+        "product.group.category",
+        string="Group Category",
+        tracking=True,
+    )
+
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -168,11 +168,17 @@ class PurchaseRequest(models.Model):
             "user_id",
             "employee_id",
             "company_id",
-            "is_asset",
-            "line_ids",
+            "group_category_id",
          }
         if protected.intersection(values) and not self.env.context.get("skip_request_lock"):
             if self.filtered(lambda request: request.state != "draft"):
+
+                _logger.warning(
+                    "PURCHASE REQUEST LOCK BLOCKED. VALUES=%s CONTEXT=%s",
+                    values,
+                    self.env.context,
+                )
+
                 raise UserError(_("Only draft purchase requests can be edited."))
         if "state" in values and not self.env.context.get("skip_request_workflow"):
             raise AccessError(_("Use the workflow buttons to change the status."))
@@ -307,53 +313,45 @@ class PurchaseRequest(models.Model):
             confirm=True,
         )
     def _create_purchase_document(self, selected_lines, confirm=False):
-        self = self.with_context(
-            skip_request_lock=True
-        )
         self.ensure_one()
 
-        self._validate_for_order()
+        for line in selected_lines:
+            line._validate_for_order()
 
         if not selected_lines:
             raise UserError(
                 _("No selected items found.")
-            )
-
-        order = self.env["purchase.order"].create(
-            {
-                "company_id": self.company_id.id,
-                "origin": self.name,
-            }
         )
 
+        order_lines = []
+
         for line in selected_lines:
-            po_line = self.env["purchase.order.line"].create(
-                {
-                    "order_id": order.id,
-                    "product_id": line.product_id.id,
-                    "name": line.desc or line.product_id.display_name,
-                    "product_qty": line.qty,
-                    "product_uom": line.product_uom_id.id,
-                    "date_planned": fields.Datetime.now(),
-                    "purchase_request_line_id": line.id,
-                }
+            order_lines.append(
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": line.product_id.id,
+                        "name": line.desc or line.product_id.display_name,
+                        "product_qty": line.qty,
+                        "product_uom_id": line.product_uom_id.id,
+                        "date_planned": fields.Datetime.now(),
+                        "purchase_request_line_id": line.id,
+                    },
+                )
             )
-
-            line.with_context(
-                 skip_request_lock=True
-            ).purchase_line_ids = [
-                (4, po_line.id)
-            ]
-
-        if confirm:
-            order.button_confirm()
 
         return {
             "type": "ir.actions.act_window",
-            "name": _("Purchase Order"),
+            "name": _("Request for Quotation"),
             "res_model": "purchase.order",
             "view_mode": "form",
-            "res_id": order.id,
+            "target": "current",
+            "context": {
+                "default_origin": self.name,
+                "default_company_id": self.company_id.id,
+                "default_order_line": order_lines,
+            },
         }
 
 class PurchaseRequestLine(models.Model):

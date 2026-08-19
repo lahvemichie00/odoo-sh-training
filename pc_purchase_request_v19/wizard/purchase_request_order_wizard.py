@@ -9,7 +9,7 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
     supplier_id = fields.Many2one(
         "res.partner",
         string="Supplier",
-        required=True,
+        required=False,
         domain=[("supplier_rank", ">", 0)],
     )
 
@@ -140,7 +140,7 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
 
             order = self.env["purchase.order"].create(
                 {
-                    "partner_id": self.supplier_id.id,
+                    # "partner_id": self.supplier_id.id,
                     "company_id": self.company_id.id,
                     "currency_id": self.currency_id.id,
                     "picking_type_id": self.picking_type_id.id,

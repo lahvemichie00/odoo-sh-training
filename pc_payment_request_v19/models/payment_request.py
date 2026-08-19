@@ -95,7 +95,12 @@ class PaymentRequestOrder(models.Model):
         compute="_compute_totals",
         store=True,
     )
-    is_locked = fields.Boolean(compute="_compute_is_locked", store=True)
+    is_locked = fields.Boolean(
+        string="Locked",
+        default=False,
+        tracking=True,
+    )
+
     submitted_by_id = fields.Many2one("res.users", string="Submitted By", readonly=True)
     approved_by_id = fields.Many2one("res.users", string="Approved By", readonly=True)
     rejected_by_id = fields.Many2one("res.users", string="Rejected By", readonly=True)
@@ -170,11 +175,6 @@ class PaymentRequestOrder(models.Model):
             else:
                 request.amount_currency = request.amount_lines_total
 
-    @api.depends("state")
-    def _compute_is_locked(self):
-        for request in self:
-            request.is_locked = request.state != "draft"
-
     @api.depends("payment_ids.state")
     def _compute_payment_voucher(self):
         for request in self:
@@ -196,11 +196,14 @@ class PaymentRequestOrder(models.Model):
             "journal_id", "date_order", "payment_details", "is_payment_other",
             "payment_mode_id", "line_ids",
         }
+
         if protected.intersection(values) and not self.env.context.get("skip_request_lock"):
-            if self.filtered(lambda request: request.state != "draft"):
-                raise UserError(_("Only draft payment requests can be edited."))
+            if self.filtered(lambda request: request.is_locked):
+                raise UserError(_("Payment request is locked and cannot be edited."))
+
         if "state" in values and not self.env.context.get("skip_request_workflow"):
             raise AccessError(_("Use the workflow buttons to change the status."))
+
         return super().write(values)
 
     def unlink(self):
@@ -212,14 +215,19 @@ class PaymentRequestOrder(models.Model):
         for request in self:
             if request.state != "draft":
                 raise UserError(_("Only draft payment requests can be submitted."))
+
             if not request.line_ids:
                 raise UserError(_("Add at least one payment request line."))
+
             if request.line_ids.filtered(lambda line: line.amount <= 0):
                 raise UserError(_("Every payment request line must have a positive amount."))
+
             request._approval_refresh(replace=True)
+
             request.with_context(skip_request_workflow=True).write(
                 {
                     "state": "waiting_approval",
+                    "is_locked": True,
                     "submitted_by_id": self.env.user.id,
                     "date_submitted": fields.Datetime.now(),
                     "approved_by_id": False,
@@ -229,7 +237,60 @@ class PaymentRequestOrder(models.Model):
                     "reject_reason": False,
                 }
             )
-            request.message_post(body=_("Payment request submitted for approval."))
+
+            request.message_post(
+                body=_("Payment request submitted for approval.")
+            )
+
+        return True 
+
+    def action_toggle_lock(self):
+        for request in self:
+            if request.user_request_id != self.env.user:
+                raise UserError(
+                    _("Only the requester can lock or unlock this payment request.")
+                )
+
+            if request.is_locked:
+                request.write({
+                    "is_locked": False,
+                })
+
+                request.message_post(
+                    body=_(
+                        "Payment request unlocked by %(user)s for correction."
+                    )
+                    % {
+                        "user": self.env.user.name,
+                    }
+                )
+
+            else:
+                request._approval_refresh(replace=True)
+
+                request.with_context(skip_request_workflow=True).write(
+                    {
+                        "state": "waiting_approval",
+                        "is_locked": True,
+                        "submitted_by_id": self.env.user.id,
+                        "date_submitted": fields.Datetime.now(),
+                        "approved_by_id": False,
+                        "date_approved": False,
+                        "rejected_by_id": False,
+                        "date_rejected": False,
+                        "reject_reason": False,
+                    }
+                )
+
+                request.message_post(
+                    body=_(
+                        "Payment request locked and sent for approval by %(user)s."
+                    )
+                    % {
+                        "user": self.env.user.name,
+                    }
+                )
+
         return True
 
     def action_reset_to_draft(self):
@@ -253,8 +314,46 @@ class PaymentRequestOrder(models.Model):
 
     def action_approve(self):
         if self.filtered(lambda request: request.state != "waiting_approval"):
-            raise UserError(_("The payment request is not waiting for approval."))
+            raise UserError(
+                _("The payment request is not waiting for approval.")
+            )
+
         return self._approval_action_approve()
+
+
+    def action_register_payment(self):
+        self.ensure_one()
+
+        if self.state != "approved":
+            raise UserError(
+                _("Only approved payment requests can register payment.")
+            )
+
+        if not self.journal_id:
+            raise UserError(
+                _("Please select a Payment Journal before registering payment.")
+            )
+
+        payment = self.env["account.payment"].create(
+            {
+                "payment_type": "outbound",
+                "partner_type": "supplier",
+                "partner_id": self.partner_id.id,
+                "amount": self.amount_lines_total,
+                "currency_id": self.currency_id.id,
+                "journal_id": self.journal_id.id,
+                "payment_request_id": self.id,
+                "date": fields.Date.today(),
+            }
+        )
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Payment"),
+            "res_model": "account.payment",
+            "view_mode": "form",
+            "res_id": payment.id,
+        }
 
     def _approval_matrix_approved(self, user):
         self.with_context(skip_request_workflow=True).write(
@@ -264,7 +363,15 @@ class PaymentRequestOrder(models.Model):
                 "date_approved": fields.Datetime.now(),
             }
         )
-        self.message_post(body=_("Payment request approved."))
+        
+        self.message_post(
+            body=_(
+                "Payment request approved by %(user)s."
+            )
+            % {
+                "user": user.name,
+            }
+        )
 
     def _approval_matrix_rejected(self, user, reason):
         self.with_context(skip_request_workflow=True).write(

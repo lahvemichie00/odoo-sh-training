@@ -12,6 +12,7 @@
         "data/purchase_request_sequence.xml",
         "views/purchase_request_views.xml",
         "wizard/purchase_request_order_wizard_views.xml",
+        "views/product_group_category_views.xml",
         "views/purchase_request_menus.xml",
     ],
     "installable": True,
