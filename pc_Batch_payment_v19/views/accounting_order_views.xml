@@ -29,7 +29,7 @@
             <xpath expr="//notebook" position="inside">
                 <field name="approval_can_current_user" invisible="1"/>
                 <field name="approval_is_approved" invisible="1"/>
-                <page string="Approvals" invisible="approval_state == 'new'">
+                <page string="Approvals">
                     <field name="approval_document_ids" readonly="1">
                         <list create="0" delete="0">
                             <field name="res_model"/>
