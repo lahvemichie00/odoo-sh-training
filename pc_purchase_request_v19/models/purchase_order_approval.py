@@ -83,6 +83,12 @@ class PurchaseOrder(models.Model):
         The PO must be approved before it can be confirmed.
         """
 
+        # Allow Odoo demo data to be installed normally.
+        # Odoo's purchase_stock demo data calls button_confirm()
+        # during module installation.
+        if self.env.context.get("install_demo"):
+            return super().button_confirm()
+
         for order in self:
 
             # ==========================
