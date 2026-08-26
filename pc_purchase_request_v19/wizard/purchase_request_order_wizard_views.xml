@@ -11,13 +11,14 @@
                         <field name="purchase_order_id"/>
                         <field name="picking_type_id"/>
                     </group>
+
                     <group>
                         <field name="company_id" groups="base.group_multi_company"/>
                         <field name="currency_id"/>
                         <field name="group_category_id"/>
-                        <field name="confirm_order"/>
                     </group>
                 </group>
+
                 <field name="item_ids">
                     <list editable="bottom">
                         <field name="line_id" readonly="1"/>
@@ -28,10 +29,15 @@
                         <field name="price_unit"/>
                     </list>
                 </field>
+
                 <footer>
-                    <button name="action_create_order" type="object" string="Create"
+                    <button name="action_create_order"
+                            type="object"
+                            string="Create"
                             class="btn-primary"/>
-                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                    <button string="Cancel"
+                            special="cancel"
+                            class="btn-secondary"/>
                 </footer>
             </form>
         </field>

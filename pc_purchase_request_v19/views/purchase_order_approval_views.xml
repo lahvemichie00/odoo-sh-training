@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_purchase_order_approval_form" model="ir.ui.view">
+        <field name="name">purchase.order.approval.form</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//header" position="inside">
+
+                <button name="action_submit_for_approval"
+                        type="object"
+                        string="SUBMIT FOR APPROVAL"
+                        class="oe_highlight"
+                        invisible="approval_state != 'draft'"/>
+
+                <button name="action_approve"
+                        type="object"
+                        string="APPROVE"
+                        class="oe_highlight"
+                        invisible="approval_state != 'waiting_approval' or not approval_can_current_user"/>
+
+                <button name="action_open_approval_reject_wizard"
+                        type="object"
+                        string="REJECT"
+                        invisible="approval_state != 'waiting_approval' or not approval_can_current_user"/>
+
+            </xpath>
+
+            <xpath expr="//sheet" position="inside">
+
+                <field name="approval_stage" invisible="1"/>
+                <field name="approval_state" invisible="1"/>
+                <field name="approval_can_current_user" invisible="1"/>
+                <field name="approval_is_approved" invisible="1"/>
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

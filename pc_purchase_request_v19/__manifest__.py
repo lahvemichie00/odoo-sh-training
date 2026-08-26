@@ -14,6 +14,7 @@
         "wizard/purchase_request_order_wizard_views.xml",
         "views/product_group_category_views.xml",
         "views/purchase_request_menus.xml",
+        "views/purchase_order_approval_views.xml",
     ],
     "installable": True,
     "application": False,
