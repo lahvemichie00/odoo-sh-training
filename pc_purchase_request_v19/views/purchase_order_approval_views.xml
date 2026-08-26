@@ -8,32 +8,24 @@
 
         <field name="arch" type="xml">
 
-            <!-- ========================================================= -->
-            <!-- APPROVAL STATUSBAR                                       -->
-            <!-- ========================================================= -->
+            <!-- ===================================================== -->
+            <!-- APPROVAL BUTTONS                                      -->
+            <!-- ===================================================== -->
 
             <xpath expr="//header" position="inside">
 
-                <field name="approval_state"
-                       widget="statusbar"
-                       statusbar_visible="draft,waiting_approval,approved"
-                       statusbar_colors="approved:success,rejected:danger"/>
-
-                <!-- Submit RFQ / PO for approval -->
                 <button name="action_submit_for_approval"
                         type="object"
                         string="SUBMIT FOR APPROVAL"
                         class="oe_highlight"
                         invisible="approval_state != 'draft'"/>
 
-                <!-- Approve RFQ / PO -->
                 <button name="action_approve"
                         type="object"
                         string="APPROVE"
                         class="oe_highlight"
                         invisible="approval_state != 'waiting_approval' or not approval_can_current_user"/>
 
-                <!-- Reject RFQ / PO -->
                 <button name="action_open_approval_reject_wizard"
                         type="object"
                         string="REJECT"
@@ -42,13 +34,36 @@
             </xpath>
 
 
-            <!-- ========================================================= -->
-            <!-- TECHNICAL APPROVAL FIELDS                                -->
-            <!-- ========================================================= -->
+            <!-- ===================================================== -->
+            <!-- APPROVAL INFORMATION                                  -->
+            <!-- ===================================================== -->
+
+            <xpath expr="//notebook" position="before">
+
+                <group string="Approval">
+
+                    <group>
+                        <field name="approval_stage"
+                               string="Approval Stage"
+                               readonly="1"/>
+                    </group>
+
+                    <group>
+                        <field name="approval_state"
+                               string="Approval Status"
+                               readonly="1"/>
+                    </group>
+
+                </group>
+
+            </xpath>
+
+
+            <!-- ===================================================== -->
+            <!-- TECHNICAL FIELDS                                      -->
+            <!-- ===================================================== -->
 
             <xpath expr="//sheet" position="inside">
-
-                <field name="approval_stage" invisible="1"/>
 
                 <field name="approval_can_current_user"
                        invisible="1"/>

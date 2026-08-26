@@ -20,7 +20,7 @@ class PurchaseOrder(models.Model):
     approval_state = fields.Selection(
         [
             ("draft", "Draft"),
-            ("waiting_approval", "Waiting Approval"),
+            ("waiting_approval", "To Approve"),
             ("approved", "Approved"),
             ("rejected", "Rejected"),
         ],
