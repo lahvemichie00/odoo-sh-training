@@ -5,22 +5,35 @@
         <field name="name">purchase.order.approval.form</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
+
         <field name="arch" type="xml">
+
+            <!-- ========================================================= -->
+            <!-- APPROVAL STATUSBAR                                       -->
+            <!-- ========================================================= -->
 
             <xpath expr="//header" position="inside">
 
+                <field name="approval_state"
+                       widget="statusbar"
+                       statusbar_visible="draft,waiting_approval,approved"
+                       statusbar_colors="approved:success,rejected:danger"/>
+
+                <!-- Submit RFQ / PO for approval -->
                 <button name="action_submit_for_approval"
                         type="object"
                         string="SUBMIT FOR APPROVAL"
                         class="oe_highlight"
                         invisible="approval_state != 'draft'"/>
 
+                <!-- Approve RFQ / PO -->
                 <button name="action_approve"
                         type="object"
                         string="APPROVE"
                         class="oe_highlight"
                         invisible="approval_state != 'waiting_approval' or not approval_can_current_user"/>
 
+                <!-- Reject RFQ / PO -->
                 <button name="action_open_approval_reject_wizard"
                         type="object"
                         string="REJECT"
@@ -28,12 +41,20 @@
 
             </xpath>
 
+
+            <!-- ========================================================= -->
+            <!-- TECHNICAL APPROVAL FIELDS                                -->
+            <!-- ========================================================= -->
+
             <xpath expr="//sheet" position="inside">
 
                 <field name="approval_stage" invisible="1"/>
-                <field name="approval_state" invisible="1"/>
-                <field name="approval_can_current_user" invisible="1"/>
-                <field name="approval_is_approved" invisible="1"/>
+
+                <field name="approval_can_current_user"
+                       invisible="1"/>
+
+                <field name="approval_is_approved"
+                       invisible="1"/>
 
             </xpath>
 
