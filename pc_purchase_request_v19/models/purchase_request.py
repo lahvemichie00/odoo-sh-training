@@ -5,16 +5,6 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-
-class ProductGroupCategory(models.Model):
-    _name = "product.group.category"
-    _description = "Group Category of Product"
-    _order = "name"
-
-    name = fields.Char(required=True)
-    active = fields.Boolean(default=True)
-
-
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
@@ -55,7 +45,13 @@ class PurchaseRequest(models.Model):
         store=True,
         readonly=True,
     )
-    is_asset = fields.Boolean(string="Asset")
+
+    group_category_id = fields.Many2one(
+        "product.group.category",
+        string="Group Category",
+        tracking=True,
+    )
+
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -172,7 +168,7 @@ class PurchaseRequest(models.Model):
             "user_id",
             "employee_id",
             "company_id",
-            "is_asset",
+            "group_category_id",
          }
         if protected.intersection(values) and not self.env.context.get("skip_request_lock"):
             if self.filtered(lambda request: request.state != "draft"):

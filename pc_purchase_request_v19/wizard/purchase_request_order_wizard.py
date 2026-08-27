@@ -43,10 +43,6 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         default=lambda self: self.env.company.currency_id,
     )
 
-    confirm_order = fields.Boolean(
-        readonly=True
-    )
-
     item_ids = fields.One2many(
         "purchase.request.line.make.purchase.order.item",
         "wiz_id",
@@ -110,14 +106,11 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
 
         return values
 
-
     @api.onchange("supplier_id")
     def _onchange_supplier_id(self):
         self.purchase_order_id = False
 
-
     def action_create_order(self):
-
         self.ensure_one()
 
         if not self.item_ids:
@@ -132,18 +125,16 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                 _("Purchase quantity must be positive.")
             )
 
-
         order = self.purchase_order_id
 
-
         if not order:
-
             order = self.env["purchase.order"].create(
                 {
-                    # "partner_id": self.supplier_id.id,
                     "company_id": self.company_id.id,
                     "currency_id": self.currency_id.id,
                     "picking_type_id": self.picking_type_id.id,
+                    "approval_stage": "rfq",
+                    "approval_state": "draft",
                     "origin": ", ".join(
                         self.item_ids.mapped(
                             "line_id.purchase_request_id.name"
@@ -152,15 +143,12 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                 }
             )
 
-
         for item in self.item_ids:
 
             request_line = item.line_id
 
-
             if item.product_qty > (
-                request_line.qty -
-                request_line.qty_released
+                request_line.qty - request_line.qty_released
             ):
                 raise UserError(
                     _(
@@ -168,7 +156,6 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                     )
                     % request_line.product_id.display_name
                 )
-
 
             po_line = self.env["purchase.order.line"].create(
                 {
@@ -183,15 +170,12 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                 }
             )
 
-
             request_line.purchase_line_ids = [
                 (4, po_line.id)
             ]
 
-
-        if self.confirm_order:
-            order.button_confirm()
-
+        # Do not automatically confirm the RFQ.
+        # The RFQ must go through the RFQ approval workflow first.
 
         return {
             "type": "ir.actions.act_window",
@@ -201,19 +185,15 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         }
 
 
-
 class PurchaseRequestLineMakePurchaseOrderItem(models.TransientModel):
-
     _name = "purchase.request.line.make.purchase.order.item"
     _description = "Purchase Request Line Make Purchase Order Item"
-
 
     wiz_id = fields.Many2one(
         "purchase.request.line.make.purchase.order",
         required=True,
         ondelete="cascade",
     )
-
 
     line_id = fields.Many2one(
         "purchase.request.line",
@@ -222,31 +202,26 @@ class PurchaseRequestLineMakePurchaseOrderItem(models.TransientModel):
         ondelete="cascade",
     )
 
-
     product_id = fields.Many2one(
         related="line_id.product_id",
         readonly=True,
     )
-
 
     name = fields.Char(
         string="Description",
         required=True,
     )
 
-
     product_qty = fields.Float(
         string="Quantity to purchase",
         required=True,
     )
-
 
     product_uom_id = fields.Many2one(
         "uom.uom",
         string="UoM",
         required=True,
     )
-
 
     price_unit = fields.Float(
         string="Price",
