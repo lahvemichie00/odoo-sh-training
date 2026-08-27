@@ -61,10 +61,10 @@ class PurchaseOrder(models.Model):
             # Generate a separate RFQ running number only
             # when the document is created as an RFQ.
             #
-            # Direct PO creation can later pass:
+            # Direct PO creation:
             # approval_stage = "po"
             #
-            # so no RFQ number will be generated for a standalone PO.
+            # No RFQ number will be generated for a standalone PO.
 
             approval_stage = vals.get("approval_stage", "rfq")
 
@@ -72,8 +72,13 @@ class PurchaseOrder(models.Model):
                 approval_stage == "rfq"
                 and not vals.get("rfq_number")
             ):
+                company = self.env["res.company"].browse(
+                    vals.get("company_id") or self.env.company.id
+                )
+
                 vals["rfq_number"] = (
                     self.env["ir.sequence"]
+                    .with_company(company)
                     .next_by_code("purchase.request.rfq")
                     or _("New")
                 )
