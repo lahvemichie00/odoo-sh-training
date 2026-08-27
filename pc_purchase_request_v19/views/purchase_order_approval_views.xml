@@ -35,6 +35,20 @@
 
 
             <!-- ===================================================== -->
+            <!-- RFQ REFERENCE                                         -->
+            <!-- ===================================================== -->
+
+            <xpath expr="//field[@name='partner_id']" position="after">
+
+                <field name="rfq_number"
+                       string="RFQ Reference"
+                       readonly="1"
+                       invisible="approval_stage != 'rfq'"/>
+
+            </xpath>
+
+
+            <!-- ===================================================== -->
             <!-- APPROVAL INFORMATION                                  -->
             <!-- ===================================================== -->
 
