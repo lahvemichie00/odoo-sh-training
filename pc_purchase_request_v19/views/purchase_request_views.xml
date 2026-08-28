@@ -585,13 +585,9 @@
         <field name="binding_model_id"
                ref="model_purchase_request_line"/>
 
-        <field name="binding_view_types">
-            list
-        </field>
+        <field name="binding_view_types">list</field>
 
-        <field name="state">
-            code
-        </field>
+        <field name="state">code</field>
 
         <field name="code">
             action = records.with_context(pr_confirm_order=True).action_open_create_order_wizard()
