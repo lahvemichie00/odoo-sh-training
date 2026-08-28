@@ -25,10 +25,8 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         "stock.picking.type",
         string="Picking Type",
         required=True,
-        domain=[
-            ("code", "=", "incoming"),
-            ("company_id", "in", [company_id, False]),
-        ],
+        domain="[('code', '=', 'incoming'), "
+               "('company_id', 'in', [company_id, False])]",
     )
 
     group_category_id = fields.Many2one(
@@ -141,16 +139,7 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         # ==========================================================
         # DETERMINE DOCUMENT TYPE
         # ==========================================================
-        #
-        # pr_confirm_order=True
-        #     -> Direct Purchase Order
-        #
-        # pr_confirm_order=False
-        #     -> Request for Quotation
-        #
-        # default_confirm_order is also supported because the
-        # wizard action passes this value in its context.
-        #
+
         create_po = bool(
             self.env.context.get("pr_confirm_order")
             or self.env.context.get("default_confirm_order")
@@ -165,16 +154,11 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         order = self.purchase_order_id
 
         if order:
-            # Existing draft purchase document.
-            #
-            # Only allow reuse of a draft document.
             if order.state != "draft":
                 raise UserError(
                     _("Only draft purchase orders can be reused.")
                 )
 
-            # Make sure the approval stage reflects the purpose
-            # of the current operation.
             order.with_context(
                 skip_purchase_approval_workflow=True
             ).write(
@@ -185,16 +169,6 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
             )
 
         else:
-            # Create a completely new purchase document.
-            #
-            # RFQ:
-            #   approval_stage = rfq
-            #   purchase_order_approval.create() generates
-            #   the separate RFQ running number.
-            #
-            # Direct PO:
-            #   approval_stage = po
-            #   no RFQ number is generated.
             order = self.env["purchase.order"].create(
                 {
                     "company_id": self.company_id.id,
@@ -263,17 +237,6 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         # ==========================================================
         # DO NOT CONFIRM AUTOMATICALLY
         # ==========================================================
-        #
-        # Both RFQ and direct PO must remain in Draft.
-        #
-        # RFQ:
-        #   Draft -> To Approve -> Approved
-        #
-        # Direct PO:
-        #   Draft -> To Approve -> Approved -> Confirmed
-        #
-        # The approval workflow in purchase_order_approval.py
-        # controls the next stages.
 
         return {
             "type": "ir.actions.act_window",
