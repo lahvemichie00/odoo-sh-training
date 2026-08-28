@@ -255,7 +255,9 @@ class PurchaseRequest(models.Model):
     @api.constrains("line_ids.qty")
     def _check_line_quantity(self):
         for request in self:
-            if request.line_ids.filtered(lambda line: line.qty <= 0):
+            if request.line_ids.filtered(
+                lambda line: line.qty <= 0
+            ):
                 raise ValidationError(
                     _("Purchase request quantities must be positive.")
                 )
@@ -448,6 +450,40 @@ class PurchaseRequest(models.Model):
             )
 
         return True
+
+    # ==========================================================
+    # OPEN CANCEL WIZARD
+    # ==========================================================
+
+    def action_open_cancel_wizard(self):
+        self.ensure_one()
+
+        if self.state not in (
+            "draft",
+            "waiting_approval",
+            "approved",
+        ):
+            raise UserError(
+                _(
+                    "Only Draft, Waiting Approval or Approved "
+                    "purchase requests can be cancelled."
+                )
+            )
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Cancel Purchase Request"),
+            "res_model": "purchase.request.cancel.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_purchase_request_id": self.id,
+            },
+        }
+
+    # ==========================================================
+    # CANCEL
+    # ==========================================================
 
     def action_cancel(self, reason=False):
         for request in self:
