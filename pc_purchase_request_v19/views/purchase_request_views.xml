@@ -84,13 +84,12 @@
                             class="oe_highlight"
                             invisible="state != 'approved'"/>
 
-                    <!-- CREATE PO
+                    <!-- CREATE PO -->
                     <button name="action_create_po"
                             type="object"
                             string="CREATE PO"
                             class="oe_highlight"
                             invisible="state != 'approved'"/>
-                    -->
 
                     <!-- STATUSBAR -->
                     <field name="state"

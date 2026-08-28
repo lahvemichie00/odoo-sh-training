@@ -169,7 +169,16 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
             )
 
         else:
-            order = self.env["purchase.order"].create(
+            # Purchase Order / RFQ is being created
+            # through an approved Purchase Request.
+            #
+            # This context is required because the
+            # purchase.order.create() method blocks
+            # direct creation by normal purchase users.
+
+            order = self.env["purchase.order"].with_context(
+                from_purchase_request=True
+            ).create(
                 {
                     "company_id": self.company_id.id,
                     "currency_id": self.currency_id.id,

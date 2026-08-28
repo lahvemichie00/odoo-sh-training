@@ -56,17 +56,47 @@ class PurchaseOrder(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        """
+        Prevent normal Purchase Users from creating RFQs/POs
+        directly.
+
+        Purchase documents must be created through the
+        approved Purchase Request workflow.
+
+        Purchase Managers can still create documents directly.
+        Internal Purchase Request workflow is allowed through
+        the `from_purchase_request` context.
+        """
+
+        # ------------------------------------------------------
+        # BLOCK DIRECT RFQ / PO CREATION
+        # ------------------------------------------------------
+
+        if (
+            not self.env.context.get("from_purchase_request")
+            and not self.env.user.has_group(
+                "purchase.group_purchase_manager"
+            )
+            and not self.env.context.get("install_demo")
+        ):
+            raise UserError(
+                _(
+                    "Purchase Orders and RFQs must be created "
+                    "through an approved Purchase Request."
+                )
+            )
+
+        # ------------------------------------------------------
+        # GENERATE RFQ REFERENCE
+        # ------------------------------------------------------
+
         for vals in vals_list:
 
-            # Generate a separate RFQ running number only
-            # when the document is created as an RFQ.
-            #
-            # Direct PO creation:
-            # approval_stage = "po"
-            #
-            # No RFQ number will be generated for a standalone PO.
-
             approval_stage = vals.get("approval_stage", "rfq")
+
+            # Generate RFQ number only for RFQ stage.
+            #
+            # No RFQ number is generated for Purchase Order stage.
 
             if (
                 approval_stage == "rfq"
@@ -149,19 +179,25 @@ class PurchaseOrder(models.Model):
         Control RFQ and Purchase Order confirmation.
 
         RFQ:
-        The RFQ must first be approved.
-        After RFQ approval, it moves to PO approval stage
-        instead of being immediately confirmed.
+        - RFQ must be approved first.
+        - After RFQ approval, the document moves to PO
+          approval stage.
+        - RFQ is NOT immediately confirmed.
 
         PO:
-        The PO must be approved before it can be confirmed.
+        - PO must be approved before confirmation.
         """
 
-        # Allow Odoo demo data to be installed normally.
-        # Odoo's purchase_stock demo data calls button_confirm()
-        # during module installation.
+        # ------------------------------------------------------
+        # ALLOW ODOO DEMO INSTALLATION
+        # ------------------------------------------------------
+
         if self.env.context.get("install_demo"):
             return super().button_confirm()
+
+        # ------------------------------------------------------
+        # VALIDATE EACH ORDER
+        # ------------------------------------------------------
 
         for order in self:
 
@@ -180,8 +216,10 @@ class PurchaseOrder(models.Model):
                         )
                     )
 
-                # RFQ has been approved.
-                # Move the document to PO approval stage.
+                # --------------------------------------------------
+                # RFQ APPROVED
+                # Move to PO approval stage.
+                # --------------------------------------------------
 
                 order.with_context(
                     skip_purchase_approval_workflow=True
@@ -199,7 +237,7 @@ class PurchaseOrder(models.Model):
                     )
                 )
 
-                # Do NOT confirm the RFQ yet.
+                # Do NOT confirm yet.
                 continue
 
             # ==================================================
@@ -216,8 +254,9 @@ class PurchaseOrder(models.Model):
                         )
                     )
 
-        # Only PO documents that have passed approval
-        # will reach the normal Odoo confirmation process.
+        # ------------------------------------------------------
+        # ONLY APPROVED PO REACHES ODOO CONFIRMATION
+        # ------------------------------------------------------
 
         return super().button_confirm()
 
