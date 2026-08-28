@@ -51,21 +51,80 @@ class PurchaseOrder(models.Model):
     )
 
     # ==========================================================
+    # PURCHASE REQUEST SMART BUTTON
+    # ==========================================================
+
+    purchase_request_ids = fields.Many2many(
+        "purchase.request",
+        compute="_compute_purchase_request_ids",
+        string="Purchase Requests",
+    )
+
+    purchase_request_count = fields.Integer(
+        string="Purchase Request Count",
+        compute="_compute_purchase_request_ids",
+    )
+
+    @api.depends("order_line.purchase_request_line_id")
+    def _compute_purchase_request_ids(self):
+        for order in self:
+            requests = (
+                order.order_line
+                .mapped("purchase_request_line_id")
+                .mapped("purchase_request_id")
+            )
+
+            order.purchase_request_ids = requests
+            order.purchase_request_count = len(requests)
+
+    def action_open_purchase_requests(self):
+        self.ensure_one()
+
+        requests = (
+            self.order_line
+            .mapped("purchase_request_line_id")
+            .mapped("purchase_request_id")
+        )
+
+        if not requests:
+            return False
+
+        if len(requests) == 1:
+            return {
+                "type": "ir.actions.act_window",
+                "name": _("Purchase Request"),
+                "res_model": "purchase.request",
+                "view_mode": "form",
+                "res_id": requests.id,
+                "target": "current",
+            }
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Purchase Requests"),
+            "res_model": "purchase.request",
+            "view_mode": "list,form",
+            "domain": [
+                ("id", "in", requests.ids),
+            ],
+            "target": "current",
+        }
+
+    # ==========================================================
     # CREATE
     # ==========================================================
 
     @api.model_create_multi
     def create(self, vals_list):
         """
-        Prevent normal Purchase Users from creating RFQs/POs
-        directly.
+        Purchase Orders / RFQs must originate from an
+        approved Purchase Request.
 
-        Purchase documents must be created through the
-        approved Purchase Request workflow.
+        Direct creation from the Purchase Order / RFQ menu
+        is blocked for normal users and managers.
 
-        Purchase Managers can still create documents directly.
-        Internal Purchase Request workflow is allowed through
-        the `from_purchase_request` context.
+        The internal Purchase Request workflow is allowed
+        through the `from_purchase_request` context.
         """
 
         # ------------------------------------------------------
@@ -74,9 +133,6 @@ class PurchaseOrder(models.Model):
 
         if (
             not self.env.context.get("from_purchase_request")
-            and not self.env.user.has_group(
-                "purchase.group_purchase_manager"
-            )
             and not self.env.context.get("install_demo")
         ):
             raise UserError(
@@ -92,24 +148,26 @@ class PurchaseOrder(models.Model):
 
         for vals in vals_list:
 
-            approval_stage = vals.get("approval_stage", "rfq")
-
-            # Generate RFQ number only for RFQ stage.
-            #
-            # No RFQ number is generated for Purchase Order stage.
+            approval_stage = vals.get(
+                "approval_stage",
+                "rfq",
+            )
 
             if (
                 approval_stage == "rfq"
                 and not vals.get("rfq_number")
             ):
                 company = self.env["res.company"].browse(
-                    vals.get("company_id") or self.env.company.id
+                    vals.get("company_id")
+                    or self.env.company.id
                 )
 
                 vals["rfq_number"] = (
                     self.env["ir.sequence"]
                     .with_company(company)
-                    .next_by_code("purchase.request.rfq")
+                    .next_by_code(
+                        "purchase.request.rfq"
+                    )
                     or _("New")
                 )
 
@@ -120,17 +178,24 @@ class PurchaseOrder(models.Model):
     # ==========================================================
 
     def action_submit_for_approval(self):
+
         for order in self:
 
             if order.approval_state != "draft":
                 raise UserError(
                     _(
-                        "Only draft documents can be submitted "
-                        "for approval."
+                        "Only draft documents can be "
+                        "submitted for approval."
                     )
                 )
 
-            order._approval_refresh(replace=True)
+            # --------------------------------------------------
+            # ALWAYS CREATE A FRESH APPROVAL CHAIN
+            # --------------------------------------------------
+
+            order._approval_refresh(
+                replace=True
+            )
 
             order.with_context(
                 skip_purchase_approval_workflow=True
@@ -158,6 +223,7 @@ class PurchaseOrder(models.Model):
     # ==========================================================
 
     def action_approve(self):
+
         for order in self:
 
             if order.approval_state != "waiting_approval":
@@ -261,10 +327,78 @@ class PurchaseOrder(models.Model):
         return super().button_confirm()
 
     # ==========================================================
+    # CANCEL
+    # ==========================================================
+
+    def button_cancel(self):
+
+        result = super().button_cancel()
+
+        for order in self:
+
+            order.with_context(
+                skip_purchase_approval_workflow=True
+            ).write(
+                {
+                    "approval_state": "draft",
+                }
+            )
+
+            order.message_post(
+                body=_(
+                    "Purchase document cancelled. "
+                    "Approval status has been reset to Draft."
+                )
+            )
+
+        return result
+
+    # ==========================================================
+    # RESET TO DRAFT
+    # ==========================================================
+
+    def button_draft(self):
+
+        result = super().button_draft()
+
+        for order in self:
+
+            order.with_context(
+                skip_purchase_approval_workflow=True
+            ).write(
+                {
+                    "approval_state": "draft",
+                }
+            )
+
+            # --------------------------------------------------
+            # IMPORTANT:
+            # Do not reuse the previous approval chain.
+            # A fresh approval chain is required.
+            # --------------------------------------------------
+
+            order._approval_refresh(
+                replace=True
+            )
+
+            order.message_post(
+                body=_(
+                    "Purchase document reset to Draft. "
+                    "A new approval submission is required."
+                )
+            )
+
+        return result
+
+    # ==========================================================
     # APPROVAL LEVEL
     # ==========================================================
 
-    def _approval_level_approved(self, user, approval):
+    def _approval_level_approved(
+        self,
+        user,
+        approval,
+    ):
         return True
 
     # ==========================================================
@@ -323,7 +457,11 @@ class PurchaseOrder(models.Model):
     # APPROVAL MATRIX REJECTED
     # ==========================================================
 
-    def _approval_matrix_rejected(self, user, reason):
+    def _approval_matrix_rejected(
+        self,
+        user,
+        reason,
+    ):
 
         self.with_context(
             skip_purchase_approval_workflow=True
@@ -335,8 +473,8 @@ class PurchaseOrder(models.Model):
 
         self.message_post(
             body=_(
-                "Purchase document rejected by %(user)s. "
-                "Reason: %(reason)s"
+                "Purchase document rejected by "
+                "%(user)s. Reason: %(reason)s"
             )
             % {
                 "user": user.display_name,

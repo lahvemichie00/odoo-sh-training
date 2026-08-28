@@ -101,7 +101,10 @@
 
                 <sheet>
 
-                    <!-- Technical approval fields -->
+                    <!-- ================================================= -->
+                    <!-- TECHNICAL FIELDS -->
+                    <!-- ================================================= -->
+
                     <field name="approval_can_current_user"
                            invisible="1"/>
 
@@ -111,8 +114,54 @@
                     <field name="is_locked"
                            invisible="1"/>
 
+                    <!-- Smart button count fields -->
+                    <field name="rfq_count"
+                           invisible="1"/>
 
+                    <field name="po_count"
+                           invisible="1"/>
+
+
+                    <!-- ================================================= -->
+                    <!-- SMART BUTTONS -->
+                    <!-- ================================================= -->
+
+                    <div class="oe_button_box" name="button_box">
+
+                        <!-- RFQ SMART BUTTON -->
+                        <button name="action_open_rfqs"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-file-text-o"
+                                invisible="rfq_count == 0">
+
+                            <field name="rfq_count"
+                                   widget="statinfo"
+                                   string="RFQs"/>
+
+                        </button>
+
+
+                        <!-- PURCHASE ORDER SMART BUTTON -->
+                        <button name="action_open_purchase_orders"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-shopping-cart"
+                                invisible="po_count == 0">
+
+                            <field name="po_count"
+                                   widget="statinfo"
+                                   string="Purchase Orders"/>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
                     <!-- TITLE -->
+                    <!-- ================================================= -->
+
                     <div class="oe_title">
                         <h1>
                             <field name="name"
@@ -181,46 +230,114 @@
 
                                 <list editable="bottom">
 
-                                    <!-- Selection for RFQ / PO -->
-                                    <field name="selected_for_purchase"
-                                           invisible="parent.state != 'approved'"/>
+                                    <!-- ================================= -->
+                                    <!-- SELECTION -->
+                                    <!-- ================================= -->
 
-                                    <!-- Item Code -->
+                                    <field name="selected_for_purchase"
+                                           invisible="parent.state != 'approved'"
+                                           readonly="remaining_qty &lt;= 0"/>
+
+
+                                    <!-- ================================= -->
+                                    <!-- ITEM CODE -->
+                                    <!-- ================================= -->
+
                                     <field name="default_code"/>
 
-                                    <!-- Product -->
+
+                                    <!-- ================================= -->
+                                    <!-- PRODUCT -->
+                                    <!-- ================================= -->
+
                                     <field name="product_id"
                                            readonly="parent.state != 'draft'"/>
 
-                                    <!-- Description -->
+
+                                    <!-- ================================= -->
+                                    <!-- DESCRIPTION -->
+                                    <!-- ================================= -->
+
                                     <field name="desc"
                                            readonly="parent.state != 'draft'"/>
 
-                                    <!-- Request ETA -->
+
+                                    <!-- ================================= -->
+                                    <!-- REQUEST ETA -->
+                                    <!-- ================================= -->
+
                                     <field name="request_eta"
                                            readonly="parent.state != 'draft'"/>
 
-                                    <!-- Quantity -->
+
+                                    <!-- ================================= -->
+                                    <!-- REQUEST QUANTITY -->
+                                    <!-- ================================= -->
+
                                     <field name="qty"
                                            readonly="parent.state != 'draft'"/>
 
-                                    <!-- Quantity Released -->
+
+                                    <!-- ================================= -->
+                                    <!-- QUANTITY RELEASED -->
+                                    <!-- ================================= -->
+
                                     <field name="qty_released"
+                                           string="Released Qty"
                                            readonly="1"/>
 
-                                    <!-- UOM -->
-                                    <field name="product_uom_id"/>
 
-                                    <!-- Stock -->
+                                    <!-- ================================= -->
+                                    <!-- REMAINING QUANTITY -->
+                                    <!-- ================================= -->
+
+                                    <field name="remaining_qty"
+                                           string="Remaining Qty"
+                                           readonly="1"
+                                           decoration-danger="remaining_qty &lt;= 0"
+                                           decoration-success="remaining_qty &gt; 0"/>
+
+
+                                    <!-- ================================= -->
+                                    <!-- COMPLETED -->
+                                    <!-- ================================= -->
+
+                                    <field name="is_completed"
+                                           string="Completed"
+                                           widget="boolean"
+                                           readonly="1"/>
+
+
+                                    <!-- ================================= -->
+                                    <!-- UOM -->
+                                    <!-- ================================= -->
+
+                                    <field name="product_uom_id"
+                                           readonly="1"/>
+
+
+                                    <!-- ================================= -->
+                                    <!-- STOCK -->
+                                    <!-- ================================= -->
+
                                     <field name="stock_on_hand"
                                            readonly="1"/>
 
-                                    <!-- Incoming -->
+
+                                    <!-- ================================= -->
+                                    <!-- INCOMING -->
+                                    <!-- ================================= -->
+
                                     <field name="incoming_qty"
                                            readonly="1"/>
 
-                                    <!-- Reason -->
-                                    <field name="purchase_message"/>
+
+                                    <!-- ================================= -->
+                                    <!-- REASON -->
+                                    <!-- ================================= -->
+
+                                    <field name="purchase_message"
+                                           readonly="parent.state != 'draft'"/>
 
                                 </list>
 
@@ -249,7 +366,9 @@
 
                                     <field name="reject_message"/>
 
+
                                     <!-- Cancellation information -->
+
                                     <field name="cancelled_by"
                                            invisible="state != 'cancelled'"/>
 
@@ -269,7 +388,9 @@
 
                                     <field name="date_rejected"/>
 
+
                                     <!-- Cancellation date -->
+
                                     <field name="date_cancelled"
                                            invisible="state != 'cancelled'"/>
 
@@ -417,7 +538,8 @@
     <!-- PURCHASE REQUEST ACTION -->
     <!-- ========================================================= -->
 
-    <record id="action_purchase_request" model="ir.actions.act_window">
+    <record id="action_purchase_request"
+            model="ir.actions.act_window">
 
         <field name="name">Purchase Request</field>
 
@@ -432,7 +554,8 @@
     <!-- PURCHASE REQUEST LINE LIST -->
     <!-- ========================================================= -->
 
-    <record id="view_purchase_request_line_list" model="ir.ui.view">
+    <record id="view_purchase_request_line_list"
+            model="ir.ui.view">
 
         <field name="name">purchase.request.line.list</field>
 
@@ -446,8 +569,7 @@
 
                 <field name="purchase_request_id"/>
 
-                <field name="request_eta"
-                       readonly="parent.state != 'draft'"/>
+                <field name="request_eta"/>
 
                 <field name="default_code"/>
 
@@ -456,6 +578,15 @@
                 <field name="desc"/>
 
                 <field name="qty"/>
+
+                <field name="qty_released"
+                       string="Released Qty"/>
+
+                <field name="remaining_qty"
+                       string="Remaining Qty"/>
+
+                <field name="is_completed"
+                       string="Completed"/>
 
                 <field name="product_uom_id"/>
 
@@ -478,7 +609,8 @@
     <!-- PURCHASE REQUEST LINE SEARCH -->
     <!-- ========================================================= -->
 
-    <record id="view_purchase_request_line_search" model="ir.ui.view">
+    <record id="view_purchase_request_line_search"
+            model="ir.ui.view">
 
         <field name="name">purchase.request.line.search</field>
 

@@ -13,9 +13,17 @@ class ProductTemplate(models.Model):
 class PurchaseRequest(models.Model):
     _name = "purchase.request"
     _description = "Purchase Request"
-    _inherit = ["mail.thread", "mail.activity.mixin", "approval.matrix.mixin"]
+    _inherit = [
+        "mail.thread",
+        "mail.activity.mixin",
+        "approval.matrix.mixin",
+    ]
     _order = "date_order desc, id desc"
     _check_company_auto = True
+
+    # ==========================================================
+    # BASIC INFORMATION
+    # ==========================================================
 
     name = fields.Char(
         string="Reference",
@@ -62,6 +70,17 @@ class PurchaseRequest(models.Model):
         tracking=True,
     )
 
+    company_id = fields.Many2one(
+        "res.company",
+        required=True,
+        default=lambda self: self.env.company,
+        index=True,
+    )
+
+    # ==========================================================
+    # PURCHASE REQUEST STATUS
+    # ==========================================================
+
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -77,12 +96,9 @@ class PurchaseRequest(models.Model):
         index=True,
     )
 
-    company_id = fields.Many2one(
-        "res.company",
-        required=True,
-        default=lambda self: self.env.company,
-        index=True,
-    )
+    # ==========================================================
+    # PROCESS INFORMATION
+    # ==========================================================
 
     is_over_process = fields.Boolean(
         string="Over Process",
@@ -143,6 +159,10 @@ class PurchaseRequest(models.Model):
         readonly=True,
     )
 
+    # ==========================================================
+    # CANCELLATION
+    # ==========================================================
+
     cancellation_reason = fields.Text(
         string="Cancellation Reason",
         readonly=True,
@@ -165,6 +185,10 @@ class PurchaseRequest(models.Model):
         tracking=True,
     )
 
+    # ==========================================================
+    # PURCHASE REQUEST LINES
+    # ==========================================================
+
     line_ids = fields.One2many(
         "purchase.request.line",
         "purchase_request_id",
@@ -183,6 +207,24 @@ class PurchaseRequest(models.Model):
         compute="_compute_is_locked",
     )
 
+    # ==========================================================
+    # SMART BUTTON COUNTS
+    # ==========================================================
+
+    rfq_count = fields.Integer(
+        string="RFQs",
+        compute="_compute_purchase_document_counts",
+    )
+
+    po_count = fields.Integer(
+        string="Purchase Orders",
+        compute="_compute_purchase_document_counts",
+    )
+
+    # ==========================================================
+    # DEFAULT EMPLOYEE
+    # ==========================================================
+
     @api.model
     def _default_employee(self, user=None, company=None):
         user = user or self.env.user
@@ -196,11 +238,18 @@ class PurchaseRequest(models.Model):
             limit=1,
         )
 
+    # ==========================================================
+    # CREATE
+    # ==========================================================
+
     @api.model_create_multi
     def create(self, vals_list):
+
         for values in vals_list:
+
             company = self.env["res.company"].browse(
-                values.get("company_id") or self.env.company.id
+                values.get("company_id")
+                or self.env.company.id
             )
 
             if values.get("name", _("New")) == _("New"):
@@ -212,9 +261,11 @@ class PurchaseRequest(models.Model):
                 )
 
             if not values.get("employee_id"):
+
                 employee = self._default_employee(
                     self.env["res.users"].browse(
-                        values.get("user_id") or self.env.user.id
+                        values.get("user_id")
+                        or self.env.user.id
                     ),
                     company,
                 )
@@ -222,13 +273,20 @@ class PurchaseRequest(models.Model):
                 if employee:
                     values["employee_id"] = employee.id
 
-            if not self.env.context.get("purchase_request_migration"):
+            if not self.env.context.get(
+                "purchase_request_migration"
+            ):
                 values["state"] = "draft"
 
         return super().create(vals_list)
 
+    # ==========================================================
+    # ONCHANGE
+    # ==========================================================
+
     @api.onchange("user_id", "company_id")
     def _onchange_user(self):
+
         employee = self._default_employee(
             self.user_id,
             self.company_id,
@@ -237,32 +295,152 @@ class PurchaseRequest(models.Model):
         if employee:
             self.employee_id = employee
 
+    # ==========================================================
+    # COMPUTE TOTAL
+    # ==========================================================
+
     @api.depends("line_ids.qty")
     def _compute_total_qty(self):
+
         for request in self:
             request.total_qty = sum(
                 request.line_ids.mapped("qty")
             )
 
+    # ==========================================================
+    # COMPUTE LOCK
+    # ==========================================================
+
     @api.depends("state")
     def _compute_is_locked(self):
+
         for request in self:
             request.is_locked = request.state not in (
                 "draft",
                 "reject",
             )
 
+    # ==========================================================
+    # SMART BUTTON COUNTS
+    # ==========================================================
+
+    def _compute_purchase_document_counts(self):
+
+        PurchaseLine = self.env["purchase.order.line"]
+
+        for request in self:
+
+            lines = PurchaseLine.search(
+                [
+                    (
+                        "purchase_request_line_id",
+                        "in",
+                        request.line_ids.ids,
+                    ),
+                ]
+            )
+
+            orders = lines.mapped("order_id")
+
+            request.rfq_count = len(
+                orders.filtered(
+                    lambda order:
+                    order.approval_stage == "rfq"
+                )
+            )
+
+            request.po_count = len(
+                orders.filtered(
+                    lambda order:
+                    order.approval_stage == "po"
+                )
+            )
+
+    # ==========================================================
+    # OPEN RFQs
+    # ==========================================================
+
+    def action_open_rfqs(self):
+
+        self.ensure_one()
+
+        orders = self.env["purchase.order"].search(
+            [
+                (
+                    "order_line.purchase_request_line_id",
+                    "in",
+                    self.line_ids.ids,
+                ),
+                ("approval_stage", "=", "rfq"),
+            ]
+        )
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Requests for Quotation"),
+            "res_model": "purchase.order",
+            "view_mode": "list,form",
+            "domain": [
+                ("id", "in", orders.ids),
+            ],
+            "target": "current",
+        }
+
+    # ==========================================================
+    # OPEN PURCHASE ORDERS
+    # ==========================================================
+
+    def action_open_purchase_orders(self):
+
+        self.ensure_one()
+
+        orders = self.env["purchase.order"].search(
+            [
+                (
+                    "order_line.purchase_request_line_id",
+                    "in",
+                    self.line_ids.ids,
+                ),
+                ("approval_stage", "=", "po"),
+            ]
+        )
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Purchase Orders"),
+            "res_model": "purchase.order",
+            "view_mode": "list,form",
+            "domain": [
+                ("id", "in", orders.ids),
+            ],
+            "target": "current",
+        }
+
+    # ==========================================================
+    # VALIDATE LINE QUANTITY
+    # ==========================================================
+
     @api.constrains("line_ids.qty")
     def _check_line_quantity(self):
+
         for request in self:
+
             if request.line_ids.filtered(
                 lambda line: line.qty <= 0
             ):
                 raise ValidationError(
-                    _("Purchase request quantities must be positive.")
+                    _(
+                        "Purchase request quantities "
+                        "must be positive."
+                    )
                 )
 
+    # ==========================================================
+    # WRITE
+    # ==========================================================
+
     def write(self, values):
+
         protected = {
             "date_order",
             "user_id",
@@ -273,62 +451,108 @@ class PurchaseRequest(models.Model):
 
         if (
             protected.intersection(values)
-            and not self.env.context.get("skip_request_lock")
+            and not self.env.context.get(
+                "skip_request_lock"
+            )
         ):
+
             if self.filtered(
-                lambda request: request.state not in (
+                lambda request:
+                request.state not in (
                     "draft",
                     "reject",
                 )
             ):
+
                 _logger.warning(
-                    "PURCHASE REQUEST LOCK BLOCKED. VALUES=%s CONTEXT=%s",
+                    "PURCHASE REQUEST LOCK BLOCKED. "
+                    "VALUES=%s CONTEXT=%s",
                     values,
                     self.env.context,
                 )
 
                 raise UserError(
-                    _("Only draft or rejected purchase requests can be edited.")
+                    _(
+                        "Only draft or rejected purchase "
+                        "requests can be edited."
+                    )
                 )
 
         if (
             "state" in values
-            and not self.env.context.get("skip_request_workflow")
+            and not self.env.context.get(
+                "skip_request_workflow"
+            )
         ):
             raise AccessError(
-                _("Use the workflow buttons to change the status.")
+                _(
+                    "Use the workflow buttons "
+                    "to change the status."
+                )
             )
 
         return super().write(values)
 
+    # ==========================================================
+    # DELETE
+    # ==========================================================
+
     def unlink(self):
-        if self.filtered(lambda request: request.state != "draft"):
+
+        if self.filtered(
+            lambda request:
+            request.state != "draft"
+        ):
             raise UserError(
-                _("Only draft purchase requests can be deleted.")
+                _(
+                    "Only draft purchase requests "
+                    "can be deleted."
+                )
             )
 
         return super().unlink()
 
+    # ==========================================================
+    # CONFIRM / SUBMIT
+    # ==========================================================
+
     def action_confirm(self):
+
         for request in self:
+
             if request.state != "draft":
                 raise UserError(
-                    _("Only draft purchase requests can be confirmed.")
+                    _(
+                        "Only draft purchase requests "
+                        "can be confirmed."
+                    )
                 )
 
             if not request.line_ids:
                 raise UserError(
-                    _("Add at least one purchase request line.")
+                    _(
+                        "Add at least one purchase "
+                        "request line."
+                    )
                 )
 
             if not request.employee_id.department_id:
                 raise UserError(
-                    _("The requester employee must have a department.")
+                    _(
+                        "The requester employee must "
+                        "have a department."
+                    )
                 )
 
-            request._approval_refresh(replace=True)
+            request._approval_refresh(
+                replace=True
+            )
 
-            manager_user = request.department_id.manager_id.user_id
+            manager_user = (
+                request.department_id
+                .manager_id
+                .user_id
+            )
 
             request.with_context(
                 skip_request_workflow=True
@@ -356,33 +580,61 @@ class PurchaseRequest(models.Model):
 
             request.message_post(
                 body=_(
-                    "Purchase request confirmed and sent for approval."
+                    "Purchase request confirmed "
+                    "and sent for approval."
                 )
             )
 
         return True
 
+    # ==========================================================
+    # APPROVE
+    # ==========================================================
+
     def action_approve(self):
+
         if self.filtered(
-            lambda request: request.state != "waiting_approval"
+            lambda request:
+            request.state != "waiting_approval"
         ):
             raise UserError(
-                _("The purchase request is not waiting for approval.")
+                _(
+                    "The purchase request is not "
+                    "waiting for approval."
+                )
             )
 
         return self._approval_action_approve()
 
-    def _approval_level_approved(self, user, approval):
+    # ==========================================================
+    # APPROVAL LEVEL
+    # ==========================================================
+
+    def _approval_level_approved(
+        self,
+        user,
+        approval,
+    ):
+
         for request in self:
+
             if (
                 request.manager_department == user
                 and not request.date_approval_department
             ):
-                request.date_approval_department = fields.Datetime.now()
+
+                request.date_approval_department = (
+                    fields.Datetime.now()
+                )
 
         return True
 
+    # ==========================================================
+    # APPROVAL COMPLETED
+    # ==========================================================
+
     def _approval_matrix_approved(self, user):
+
         self.with_context(
             skip_request_workflow=True
         ).write(
@@ -394,10 +646,21 @@ class PurchaseRequest(models.Model):
         )
 
         self.message_post(
-            body=_("Purchase request approved.")
+            body=_(
+                "Purchase request approved."
+            )
         )
 
-    def _approval_matrix_rejected(self, user, reason):
+    # ==========================================================
+    # APPROVAL REJECTED
+    # ==========================================================
+
+    def _approval_matrix_rejected(
+        self,
+        user,
+        reason,
+    ):
+
         self.with_context(
             skip_request_workflow=True
         ).write(
@@ -411,8 +674,8 @@ class PurchaseRequest(models.Model):
 
         self.message_post(
             body=_(
-                "Purchase request rejected by %(user)s. "
-                "Reason: %(reason)s"
+                "Purchase request rejected by "
+                "%(user)s. Reason: %(reason)s"
             )
             % {
                 "user": user.display_name,
@@ -420,11 +683,20 @@ class PurchaseRequest(models.Model):
             }
         )
 
+    # ==========================================================
+    # RESUBMIT REJECTED REQUEST
+    # ==========================================================
+
     def action_resubmit(self):
+
         for request in self:
+
             if request.state != "reject":
                 raise UserError(
-                    _("Only rejected purchase requests can be resubmitted.")
+                    _(
+                        "Only rejected purchase requests "
+                        "can be resubmitted."
+                    )
                 )
 
             request.with_context(
@@ -445,7 +717,8 @@ class PurchaseRequest(models.Model):
 
             request.message_post(
                 body=_(
-                    "Purchase Request resubmitted and returned to Draft."
+                    "Purchase Request resubmitted "
+                    "and returned to Draft."
                 )
             )
 
@@ -456,6 +729,7 @@ class PurchaseRequest(models.Model):
     # ==========================================================
 
     def action_open_cancel_wizard(self):
+
         self.ensure_one()
 
         if self.state not in (
@@ -465,8 +739,9 @@ class PurchaseRequest(models.Model):
         ):
             raise UserError(
                 _(
-                    "Only Draft, Waiting Approval or Approved "
-                    "purchase requests can be cancelled."
+                    "Only Draft, Waiting Approval "
+                    "or Approved purchase requests "
+                    "can be cancelled."
                 )
             )
 
@@ -486,7 +761,9 @@ class PurchaseRequest(models.Model):
     # ==========================================================
 
     def action_cancel(self, reason=False):
+
         for request in self:
+
             if request.state not in (
                 "draft",
                 "waiting_approval",
@@ -494,14 +771,17 @@ class PurchaseRequest(models.Model):
             ):
                 raise UserError(
                     _(
-                        "Only Draft, Waiting Approval or Approved "
-                        "purchase requests can be cancelled."
+                        "Only Draft, Waiting Approval "
+                        "or Approved purchase requests "
+                        "can be cancelled."
                     )
                 )
 
             if not reason:
                 raise UserError(
-                    _("Please provide a cancellation reason.")
+                    _(
+                        "Please provide a cancellation reason."
+                    )
                 )
 
             request.with_context(
@@ -511,14 +791,16 @@ class PurchaseRequest(models.Model):
                     "state": "cancelled",
                     "cancellation_reason": reason,
                     "cancelled_by": self.env.user.id,
-                    "date_cancelled": fields.Datetime.now(),
+                    "date_cancelled": (
+                        fields.Datetime.now()
+                    ),
                 }
             )
 
             request.message_post(
                 body=_(
-                    "Purchase request cancelled by %(user)s. "
-                    "Reason: %(reason)s"
+                    "Purchase request cancelled by "
+                    "%(user)s. Reason: %(reason)s"
                 )
                 % {
                     "user": self.env.user.display_name,
@@ -528,16 +810,26 @@ class PurchaseRequest(models.Model):
 
         return True
 
+    # ==========================================================
+    # CREATE RFQ
+    # ==========================================================
+
     def action_create_rfq(self):
+
         self.ensure_one()
 
         selected_lines = self.line_ids.filtered(
-            lambda line: line.selected_for_purchase
+            lambda line:
+            line.selected_for_purchase
+            and line.remaining_qty > 0
         )
 
         if not selected_lines:
             raise UserError(
-                _("Please select at least one item to create RFQ.")
+                _(
+                    "Please select at least one item "
+                    "with remaining quantity to create RFQ."
+                )
             )
 
         return self._create_purchase_document(
@@ -545,16 +837,26 @@ class PurchaseRequest(models.Model):
             confirm=False,
         )
 
+    # ==========================================================
+    # CREATE PO
+    # ==========================================================
+
     def action_create_po(self):
+
         self.ensure_one()
 
         selected_lines = self.line_ids.filtered(
-            lambda line: line.selected_for_purchase
+            lambda line:
+            line.selected_for_purchase
+            and line.remaining_qty > 0
         )
 
         if not selected_lines:
             raise UserError(
-                _("Please select at least one item to create PO.")
+                _(
+                    "Please select at least one item "
+                    "with remaining quantity to create PO."
+                )
             )
 
         return self._create_purchase_document(
@@ -562,11 +864,16 @@ class PurchaseRequest(models.Model):
             confirm=True,
         )
 
+    # ==========================================================
+    # CREATE PURCHASE DOCUMENT FROM PR
+    # ==========================================================
+
     def _create_purchase_document(
         self,
         selected_lines,
         confirm=False,
     ):
+
         self.ensure_one()
 
         for line in selected_lines:
@@ -580,43 +887,98 @@ class PurchaseRequest(models.Model):
         order_lines = []
 
         for line in selected_lines:
+
+            remaining_qty = (
+                line.qty - line.qty_released
+            )
+
+            if remaining_qty <= 0:
+                raise UserError(
+                    _(
+                        "The selected line %s has no "
+                        "remaining quantity available."
+                    )
+                    % line.product_id.display_name
+                )
+
             order_lines.append(
                 (
                     0,
                     0,
                     {
-                        "product_id": line.product_id.id,
+                        "product_id": (
+                            line.product_id.id
+                        ),
                         "name": (
                             line.desc
                             or line.product_id.display_name
                         ),
-                        "product_qty": line.qty,
-                        "product_uom_id": line.product_uom_id.id,
-                        "date_planned": fields.Datetime.now(),
-                        "purchase_request_line_id": line.id,
+                        "product_qty": remaining_qty,
+                        "product_uom_id": (
+                            line.product_uom_id.id
+                        ),
+                        "date_planned": (
+                            fields.Datetime.now()
+                        ),
+                        "purchase_request_line_id": (
+                            line.id
+                        ),
                     },
                 )
             )
 
         return {
             "type": "ir.actions.act_window",
-            "name": _("Request for Quotation"),
+            "name": (
+                _("Purchase Order")
+                if confirm
+                else _("Request for Quotation")
+            ),
             "res_model": "purchase.order",
             "view_mode": "form",
             "target": "current",
             "context": {
                 "default_origin": self.name,
-                "default_company_id": self.company_id.id,
+                "default_company_id": (
+                    self.company_id.id
+                ),
                 "default_order_line": order_lines,
+
+                # IMPORTANT:
+                # Allows PurchaseOrder.create()
+                # to know that this document originates
+                # from an approved Purchase Request.
+                "from_purchase_request": True,
+
+                "default_approval_stage": (
+                    "po"
+                    if confirm
+                    else "rfq"
+                ),
+
+                "default_approval_state": "draft",
             },
         }
 
 
+# =================================================================
+# PURCHASE REQUEST LINE
+# =================================================================
+
+
 class PurchaseRequestLine(models.Model):
+
     _name = "purchase.request.line"
     _description = "Purchase Request Line"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit = [
+        "mail.thread",
+        "mail.activity.mixin",
+    ]
     _order = "request_eta, id"
+
+    # ==========================================================
+    # BASIC
+    # ==========================================================
 
     purchase_request_id = fields.Many2one(
         "purchase.request",
@@ -635,7 +997,9 @@ class PurchaseRequestLine(models.Model):
         "product.product",
         string="Product",
         required=True,
-        domain=[("purchase_ok", "=", True)],
+        domain=[
+            ("purchase_ok", "=", True)
+        ],
     )
 
     desc = fields.Text(
@@ -657,17 +1021,6 @@ class PurchaseRequestLine(models.Model):
         readonly=False,
     )
 
-    state = fields.Selection(
-        [
-            ("draft", "Draft"),
-            ("done", "Done"),
-            ("cancel", "Cancel"),
-        ],
-        default="draft",
-        required=True,
-        tracking=True,
-    )
-
     request_eta = fields.Date(
         string="Request ETA",
         required=True,
@@ -684,10 +1037,19 @@ class PurchaseRequestLine(models.Model):
         store=True,
     )
 
-    origin = fields.Char(
-        string="Reference Number",
-        compute="_compute_release",
-        store=True,
+    # ==========================================================
+    # LINE STATUS
+    # ==========================================================
+
+    state = fields.Selection(
+        [
+            ("draft", "Draft"),
+            ("done", "Done"),
+            ("cancel", "Cancel"),
+        ],
+        default="draft",
+        required=True,
+        tracking=True,
     )
 
     pr_line_state = fields.Selection(
@@ -696,10 +1058,18 @@ class PurchaseRequestLine(models.Model):
         store=True,
     )
 
+    # ==========================================================
+    # COMPANY
+    # ==========================================================
+
     company_id = fields.Many2one(
         related="purchase_request_id.company_id",
         store=True,
     )
+
+    # ==========================================================
+    # PURCHASE DOCUMENT RELATION
+    # ==========================================================
 
     purchase_line_ids = fields.Many2many(
         "purchase.order.line",
@@ -710,10 +1080,40 @@ class PurchaseRequestLine(models.Model):
         copy=False,
     )
 
+    # ==========================================================
+    # RELEASED QUANTITY
+    # ==========================================================
+
     qty_released = fields.Float(
         compute="_compute_release",
         store=True,
     )
+
+    remaining_qty = fields.Float(
+        string="Remaining Qty",
+        compute="_compute_release",
+        store=True,
+    )
+
+    is_completed = fields.Boolean(
+        string="Completed",
+        compute="_compute_release",
+        store=True,
+    )
+
+    # ==========================================================
+    # REFERENCE
+    # ==========================================================
+
+    origin = fields.Char(
+        string="Reference Number",
+        compute="_compute_release",
+        store=True,
+    )
+
+    # ==========================================================
+    # STOCK
+    # ==========================================================
 
     stock_on_hand = fields.Float(
         string="Stock On Hand",
@@ -725,119 +1125,230 @@ class PurchaseRequestLine(models.Model):
         compute="_compute_stock",
     )
 
+    # ==========================================================
+    # PRODUCT COMPUTE
+    # ==========================================================
+
     @api.depends("product_id")
     def _compute_product_fields(self):
+
         for line in self:
+
             if line.product_id:
-                line.default_code = line.product_id.default_code
-                line.product_uom_id = line.product_id.uom_id
+
+                line.default_code = (
+                    line.product_id.default_code
+                )
+
+                line.product_uom_id = (
+                    line.product_id.uom_id
+                )
+
             else:
+
                 line.default_code = False
                 line.product_uom_id = False
 
+    # ==========================================================
+    # PRODUCT ONCHANGE
+    # ==========================================================
+
     @api.onchange("product_id")
     def _onchange_product_id(self):
+
         if self.product_id:
-            self.desc = self.product_id.display_name
+
+            self.desc = (
+                self.product_id.display_name
+            )
 
             if not self.purchase_message:
+
                 self.purchase_message = (
-                    self.purchase_request_id.display_name
+                    self.purchase_request_id
+                    .display_name
                 )
+
+    # ==========================================================
+    # RELEASE COMPUTATION
+    # ==========================================================
 
     @api.depends(
         "purchase_line_ids.product_qty",
         "purchase_line_ids.order_id.name",
         "purchase_line_ids.state",
+        "purchase_line_ids.order_id.state",
+        "qty",
     )
     def _compute_release(self):
+
         for line in self:
-            valid_lines = line.purchase_line_ids.filtered(
-                lambda po_line: po_line.state != "cancel"
+
+            valid_lines = (
+                line.purchase_line_ids.filtered(
+                    lambda po_line:
+                    po_line.state != "cancel"
+                    and po_line.order_id.state != "cancel"
+                )
             )
 
             line.qty_released = sum(
                 valid_lines.mapped("product_qty")
             )
 
-            line.origin = ", ".join(
-                valid_lines.mapped("order_id.name")
+            line.remaining_qty = max(
+                line.qty - line.qty_released,
+                0.0,
             )
+
+            line.is_completed = (
+                line.remaining_qty <= 0
+                and line.qty > 0
+            )
+
+            line.origin = ", ".join(
+                valid_lines.mapped(
+                    "order_id.name"
+                )
+            )
+
+    # ==========================================================
+    # STOCK COMPUTATION
+    # ==========================================================
 
     @api.depends(
         "product_id.qty_available",
         "product_id.incoming_qty",
     )
     def _compute_stock(self):
+
         for line in self:
-            line.stock_on_hand = line.product_id.qty_available
-            line.incoming_qty = line.product_id.incoming_qty
+
+            line.stock_on_hand = (
+                line.product_id.qty_available
+            )
+
+            line.incoming_qty = (
+                line.product_id.incoming_qty
+            )
+
+    # ==========================================================
+    # SELECTION VALIDATION
+    # ==========================================================
 
     @api.constrains("selected_for_purchase")
     def _check_selected_for_purchase(self):
+
         for line in self:
+
             if line.selected_for_purchase:
-                if line.purchase_request_id.state != "approved":
+
+                if (
+                    line.purchase_request_id.state
+                    != "approved"
+                ):
                     raise ValidationError(
                         _(
-                            "Only approved purchase requests can "
-                            "select items for RFQ or PO."
+                            "Only approved purchase "
+                            "requests can select items "
+                            "for RFQ or PO."
                         )
                     )
 
+                if line.remaining_qty <= 0:
+                    raise ValidationError(
+                        _(
+                            "This purchase request line "
+                            "has already been fully released."
+                        )
+                    )
+
+    # ==========================================================
+    # VALIDATE FOR RFQ / PO
+    # ==========================================================
+
     def _validate_for_order(self):
+
         for line in self:
-            if line.purchase_request_id.state != "approved":
+
+            if (
+                line.purchase_request_id.state
+                != "approved"
+            ):
                 raise UserError(
                     _(
-                        "Only approved purchase requests can "
-                        "create RFQ or PO."
+                        "Only approved purchase "
+                        "requests can create RFQ or PO."
                     )
                 )
 
             if not line.selected_for_purchase:
                 raise UserError(
-                    _("Please select the item before creating RFQ or PO.")
+                    _(
+                        "Please select the item before "
+                        "creating RFQ or PO."
+                    )
                 )
 
             if line.state == "cancel":
                 raise UserError(
                     _(
-                        "Cancelled purchase request lines cannot "
-                        "create RFQ or PO."
+                        "Cancelled purchase request "
+                        "lines cannot create RFQ or PO."
                     )
                 )
 
-            if line.qty_released >= line.qty:
+            if line.remaining_qty <= 0:
                 raise UserError(
-                    _("The selected line has already been fully released.")
+                    _(
+                        "The selected line has already "
+                        "been fully released."
+                    )
                 )
 
+    # ==========================================================
+    # OPEN CREATE ORDER WIZARD
+    # ==========================================================
+
     def action_open_create_order_wizard(self):
+
         self._validate_for_order()
 
         return {
             "type": "ir.actions.act_window",
             "name": (
                 _("Create Purchase Order")
-                if self.env.context.get("pr_confirm_order")
+                if self.env.context.get(
+                    "pr_confirm_order"
+                )
                 else _("Create RFQ")
             ),
-            "res_model": "purchase.request.line.make.purchase.order",
+            "res_model": (
+                "purchase.request.line."
+                "make.purchase.order"
+            ),
             "view_mode": "form",
             "target": "new",
             "context": {
                 "active_model": self._name,
                 "active_ids": self.ids,
                 "default_confirm_order": bool(
-                    self.env.context.get("pr_confirm_order")
+                    self.env.context.get(
+                        "pr_confirm_order"
+                    )
                 ),
             },
         }
 
+    # ==========================================================
+    # CANCEL LINE
+    # ==========================================================
+
     def action_cancel_lines(self):
+
         self.filtered(
-            lambda line: line.state == "draft"
+            lambda line:
+            line.state == "draft"
         ).write(
             {
                 "state": "cancel",
@@ -847,7 +1358,13 @@ class PurchaseRequestLine(models.Model):
         return True
 
 
+# =================================================================
+# PURCHASE ORDER LINE
+# =================================================================
+
+
 class PurchaseOrderLine(models.Model):
+
     _inherit = "purchase.order.line"
 
     purchase_request_line_id = fields.Many2one(
@@ -867,14 +1384,20 @@ class PurchaseOrderLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+
         lines = super().create(vals_list)
 
         for line in lines:
+
             if line.purchase_request_line_id:
+
                 line.with_context(
                     skip_request_lock=True
                 ).purchase_request_line_ids = [
-                    (4, line.purchase_request_line_id.id)
+                    (
+                        4,
+                        line.purchase_request_line_id.id,
+                    )
                 ]
 
         return lines
