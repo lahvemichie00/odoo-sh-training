@@ -235,8 +235,7 @@
                                     <!-- ================================= -->
 
                                     <field name="selected_for_purchase"
-                                           invisible="parent.state != 'approved'"
-                                           readonly="remaining_qty &lt;= 0"/>
+                                           invisible="parent.state != 'approved'"/>
 
 
                                     <!-- ================================= -->
@@ -276,37 +275,6 @@
 
                                     <field name="qty"
                                            readonly="parent.state != 'draft'"/>
-
-
-                                    <!-- ================================= -->
-                                    <!-- QUANTITY RELEASED -->
-                                    <!-- ================================= -->
-
-                                    <field name="qty_released"
-                                           string="Released Qty"
-                                           readonly="1"/>
-
-
-                                    <!-- ================================= -->
-                                    <!-- REMAINING QUANTITY -->
-                                    <!-- ================================= -->
-
-                                    <field name="remaining_qty"
-                                           string="Remaining Qty"
-                                           readonly="1"
-                                           decoration-danger="remaining_qty &lt;= 0"
-                                           decoration-success="remaining_qty &gt; 0"/>
-
-
-                                    <!-- ================================= -->
-                                    <!-- COMPLETED -->
-                                    <!-- ================================= -->
-
-                                    <field name="is_completed"
-                                           string="Completed"
-                                           widget="boolean"
-                                           readonly="1"/>
-
 
                                     <!-- ================================= -->
                                     <!-- UOM -->
@@ -579,21 +547,10 @@
 
                 <field name="qty"/>
 
-                <field name="qty_released"
-                       string="Released Qty"/>
-
-                <field name="remaining_qty"
-                       string="Remaining Qty"/>
-
-                <field name="is_completed"
-                       string="Completed"/>
-
                 <field name="product_uom_id"/>
 
                 <field name="state"
                        string="State PR Line"/>
-
-                <field name="origin"/>
 
                 <field name="pr_line_state"
                        string="State PR"/>
