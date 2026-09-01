@@ -101,12 +101,13 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                                 line.desc
                                 or line.product_id.display_name
                             ),
-                            "product_qty": (
-                                line.qty - line.qty_released
-                            ),
+
+                            "product_qty": line.qty,
+
                             "product_uom_id": (
                                 line.product_uom_id.id
                             ),
+
                             "price_unit": 0.0,
                         },
                     )
@@ -213,18 +214,6 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         for item in self.item_ids:
 
             request_line = item.line_id
-
-            remaining_qty = (
-                request_line.qty - request_line.qty_released
-            )
-
-            if item.product_qty > remaining_qty:
-                raise UserError(
-                    _(
-                        "Quantity exceeds requested quantity for %s."
-                    )
-                    % request_line.product_id.display_name
-                )
 
             po_line = self.env["purchase.order.line"].create(
                 {
