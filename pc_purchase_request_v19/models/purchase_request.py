@@ -821,7 +821,6 @@ class PurchaseRequest(models.Model):
         selected_lines = self.line_ids.filtered(
             lambda line:
             line.selected_for_purchase
-            and line.remaining_qty > 0
         )
 
         if not selected_lines:
@@ -848,7 +847,6 @@ class PurchaseRequest(models.Model):
         selected_lines = self.line_ids.filtered(
             lambda line:
             line.selected_for_purchase
-            and line.remaining_qty > 0
         )
 
         if not selected_lines:
@@ -888,15 +886,21 @@ class PurchaseRequest(models.Model):
 
         for line in selected_lines:
 
-            remaining_qty = (
-                line.qty - line.qty_released
+            purchase_qty = line.qty
+
+            # --------------------------------------------------
+            # UOM SAFETY CHECK
+            # --------------------------------------------------
+
+            product_uom = (
+                line.product_uom_id
+                or line.product_id.uom_id
             )
 
-            if remaining_qty <= 0:
+            if not product_uom:
                 raise UserError(
                     _(
-                        "The selected line %s has no "
-                        "remaining quantity available."
+                        "No UOM is defined for product %s."
                     )
                     % line.product_id.display_name
                 )
@@ -913,9 +917,9 @@ class PurchaseRequest(models.Model):
                             line.desc
                             or line.product_id.display_name
                         ),
-                        "product_qty": remaining_qty,
+                        "product_qty": purchase_qty,
                         "product_uom_id": (
-                            line.product_uom_id.id
+                            product_uom.id
                         ),
                         "date_planned": (
                             fields.Datetime.now()
@@ -944,11 +948,15 @@ class PurchaseRequest(models.Model):
                 ),
                 "default_order_line": order_lines,
 
-                # IMPORTANT:
-                # Allows PurchaseOrder.create()
-                # to know that this document originates
-                # from an approved Purchase Request.
+                # --------------------------------------------------
+                # Purchase Request source
+                # --------------------------------------------------
+
                 "from_purchase_request": True,
+
+                # --------------------------------------------------
+                # Approval stage
+                # --------------------------------------------------
 
                 "default_approval_stage": (
                     "po"
@@ -1015,7 +1023,6 @@ class PurchaseRequestLine(models.Model):
     product_uom_id = fields.Many2one(
         "uom.uom",
         string="UOM",
-        required=True,
         compute="_compute_product_fields",
         store=True,
         readonly=False,
@@ -1081,37 +1088,6 @@ class PurchaseRequestLine(models.Model):
     )
 
     # ==========================================================
-    # RELEASED QUANTITY
-    # ==========================================================
-
-    qty_released = fields.Float(
-        compute="_compute_release",
-        store=True,
-    )
-
-    remaining_qty = fields.Float(
-        string="Remaining Qty",
-        compute="_compute_release",
-        store=True,
-    )
-
-    is_completed = fields.Boolean(
-        string="Completed",
-        compute="_compute_release",
-        store=True,
-    )
-
-    # ==========================================================
-    # REFERENCE
-    # ==========================================================
-
-    origin = fields.Char(
-        string="Reference Number",
-        compute="_compute_release",
-        store=True,
-    )
-
-    # ==========================================================
     # STOCK
     # ==========================================================
 
@@ -1124,6 +1100,40 @@ class PurchaseRequestLine(models.Model):
         string="Incoming",
         compute="_compute_stock",
     )
+
+    # ==========================================================
+    # CREATE
+    # ==========================================================
+
+    @api.model_create_multi
+    def create(self, vals_list):
+
+        for vals in vals_list:
+
+            product_id = vals.get("product_id")
+
+            # --------------------------------------------------
+            # Automatically set UOM from Product
+            # --------------------------------------------------
+
+            if (
+                product_id
+                and not vals.get("product_uom_id")
+            ):
+
+                product = self.env[
+                    "product.product"
+                ].browse(product_id)
+
+                if (
+                    product.exists()
+                    and product.uom_id
+                ):
+                    vals["product_uom_id"] = (
+                        product.uom_id.id
+                    )
+
+        return super().create(vals_list)
 
     # ==========================================================
     # PRODUCT COMPUTE
@@ -1140,10 +1150,10 @@ class PurchaseRequestLine(models.Model):
                     line.product_id.default_code
                 )
 
-                line.product_uom_id = (
-                    line.product_id.uom_id
-                )
-
+                if not line.product_uom_id:
+                    line.product_uom_id = (
+                        line.product_id.uom_id
+                    )
             else:
 
                 line.default_code = False
@@ -1162,55 +1172,20 @@ class PurchaseRequestLine(models.Model):
                 self.product_id.display_name
             )
 
+            # --------------------------------------------------
+            # Automatically set UOM in the form
+            # --------------------------------------------------
+
+            self.product_uom_id = (
+                self.product_id.uom_id
+            )
+
             if not self.purchase_message:
 
                 self.purchase_message = (
                     self.purchase_request_id
                     .display_name
                 )
-
-    # ==========================================================
-    # RELEASE COMPUTATION
-    # ==========================================================
-
-    @api.depends(
-        "purchase_line_ids.product_qty",
-        "purchase_line_ids.order_id.name",
-        "purchase_line_ids.state",
-        "purchase_line_ids.order_id.state",
-        "qty",
-    )
-    def _compute_release(self):
-
-        for line in self:
-
-            valid_lines = (
-                line.purchase_line_ids.filtered(
-                    lambda po_line:
-                    po_line.state != "cancel"
-                    and po_line.order_id.state != "cancel"
-                )
-            )
-
-            line.qty_released = sum(
-                valid_lines.mapped("product_qty")
-            )
-
-            line.remaining_qty = max(
-                line.qty - line.qty_released,
-                0.0,
-            )
-
-            line.is_completed = (
-                line.remaining_qty <= 0
-                and line.qty > 0
-            )
-
-            line.origin = ", ".join(
-                valid_lines.mapped(
-                    "order_id.name"
-                )
-            )
 
     # ==========================================================
     # STOCK COMPUTATION
@@ -1255,14 +1230,6 @@ class PurchaseRequestLine(models.Model):
                         )
                     )
 
-                if line.remaining_qty <= 0:
-                    raise ValidationError(
-                        _(
-                            "This purchase request line "
-                            "has already been fully released."
-                        )
-                    )
-
     # ==========================================================
     # VALIDATE FOR RFQ / PO
     # ==========================================================
@@ -1298,12 +1265,19 @@ class PurchaseRequestLine(models.Model):
                     )
                 )
 
-            if line.remaining_qty <= 0:
+            # --------------------------------------------------
+            # UOM validation
+            # --------------------------------------------------
+
+            if (
+                not line.product_uom_id
+                and not line.product_id.uom_id
+            ):
                 raise UserError(
                     _(
-                        "The selected line has already "
-                        "been fully released."
+                        "No UOM is defined for product %s."
                     )
+                    % line.product_id.display_name
                 )
 
     # ==========================================================
@@ -1358,46 +1332,43 @@ class PurchaseRequestLine(models.Model):
         return True
 
 
-# =================================================================
+# ==========================================================
 # PURCHASE ORDER LINE
-# =================================================================
+# ==========================================================
 
 
 class PurchaseOrderLine(models.Model):
 
     _inherit = "purchase.order.line"
 
+
     purchase_request_line_id = fields.Many2one(
         "purchase.request.line",
         string="Purchase Request Line",
         ondelete="set null",
         index=True,
+        copy=False,
     )
 
-    purchase_request_line_ids = fields.Many2many(
-        "purchase.request.line",
-        "purchase_request_line_prl_rel",
-        "purchase_line_id",
-        "pr_line_id",
-        string="Purchase Request Lines",
-    )
+
+    # ==========================================================
+    # CREATE PURCHASE ORDER LINE
+    # ==========================================================
 
     @api.model_create_multi
     def create(self, vals_list):
 
         lines = super().create(vals_list)
 
-        for line in lines:
-
-            if line.purchase_request_line_id:
-
-                line.with_context(
-                    skip_request_lock=True
-                ).purchase_request_line_ids = [
-                    (
-                        4,
-                        line.purchase_request_line_id.id,
-                    )
-                ]
-
         return lines
+
+
+    # ==========================================================
+    # EDIT PURCHASE ORDER LINE
+    # ==========================================================
+
+    def write(self, vals):
+
+        result = super().write(vals)
+
+        return result
