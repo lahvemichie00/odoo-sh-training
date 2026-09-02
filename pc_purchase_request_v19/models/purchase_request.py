@@ -943,16 +943,20 @@ class PurchaseRequest(models.Model):
             "target": "current",
             "context": {
                 "default_origin": self.name,
+
                 "default_company_id": (
                     self.company_id.id
                 ),
+
                 "default_order_line": order_lines,
+
 
                 # --------------------------------------------------
                 # Purchase Request source
                 # --------------------------------------------------
 
                 "from_purchase_request": True,
+
 
                 # --------------------------------------------------
                 # Approval stage
@@ -965,6 +969,16 @@ class PurchaseRequest(models.Model):
                 ),
 
                 "default_approval_state": "draft",
+
+
+                # --------------------------------------------------
+                # IMPORTANT
+                # Preserve RFQ / PO choice
+                # --------------------------------------------------
+
+                "pr_confirm_order": confirm,
+
+                "default_confirm_order": confirm,
             },
         }
 
