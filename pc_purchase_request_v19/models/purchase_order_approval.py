@@ -369,9 +369,10 @@ class PurchaseOrder(models.Model):
 
     def button_confirm(self):
 
-        # Allow Odoo installation/demo data
+        # Allow Odoo demo/install data
         if (
             self.env.context.get("install_mode")
+            or self.env.context.get("install_demo")
             or self.env.context.get("module")
         ):
             return super().button_confirm()
