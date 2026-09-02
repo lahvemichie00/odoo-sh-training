@@ -347,7 +347,10 @@ class PurchaseOrder(models.Model):
         # Block Manual RFQ / PO Creation
         # --------------------------------------------------
 
-        if not context.get("from_purchase_request"):
+        if (
+            not self.env.context.get("from_purchase_request")
+            and not self.env.context.get("install_mode")
+        ):
 
             raise UserError(
                 _(
@@ -355,7 +358,6 @@ class PurchaseOrder(models.Model):
                     "from Purchase Request."
                 )
             )
-
 
         order = super().create(vals)
 
