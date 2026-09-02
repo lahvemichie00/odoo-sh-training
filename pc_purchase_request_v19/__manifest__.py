@@ -8,6 +8,7 @@
 
     "depends": [
         "purchase_stock",
+        "stock",
         "mail",
         "hr",
         "pc_approval_matrix_v19",

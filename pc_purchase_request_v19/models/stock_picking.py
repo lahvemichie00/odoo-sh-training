@@ -13,17 +13,7 @@ class StockPicking(models.Model):
 
             if picking.purchase_id:
 
-                purchase = picking.purchase_id
-
-                if purchase.approval_stage != "po":
-
-                    raise UserError(
-                        _(
-                            "Only Purchase Order can create receipt."
-                        )
-                    )
-
-                if purchase.approval_state != "approved":
+                if picking.purchase_id.approval_state != "approved":
 
                     raise UserError(
                         _(
@@ -32,4 +22,3 @@ class StockPicking(models.Model):
                     )
 
         return super().button_validate()
-    

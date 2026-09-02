@@ -3,7 +3,11 @@ from odoo.exceptions import UserError
 
 
 class PurchaseOrder(models.Model):
-    _inherit = ["purchase.order", "approval.matrix.mixin"]
+
+    _inherit = [
+        "purchase.order",
+        "approval.matrix.mixin",
+    ]
 
     # ==========================================================
     # RFQ REFERENCE
@@ -279,10 +283,13 @@ class PurchaseOrder(models.Model):
 
 
         # Create NEW approval chain for PO
+        po.write({
+            "approval_state": "waiting_approval"
+        })
+
         po._approval_refresh(
             replace=True
         )
-
 
         po.message_post(
             body=_(
@@ -348,6 +355,8 @@ class PurchaseOrder(models.Model):
                     "from Purchase Request."
                 )
             )
+
+
         order = super().create(vals)
 
         return order
@@ -360,12 +369,15 @@ class PurchaseOrder(models.Model):
 
         for order in self:
 
-            if order.approval_state != "approved":
-                raise UserError(
-                    _(
-                        "Purchase document must be approved before confirmation."
+            if order.approval_stage in ("rfq", "po"):
+
+                if order.approval_state != "approved":
+
+                    raise UserError(
+                        _(
+                            "Purchase document must be approved before confirmation."
+                        )
                     )
-                )
 
         return super().button_confirm()
 
@@ -382,19 +394,33 @@ class PurchaseOrder(models.Model):
                     _("Only draft RFQ/PO can be submitted for approval.")
                 )
 
-            order._approval_refresh(
-                replace=True
-            )
-
             order.write({
                 "approval_state": "waiting_approval"
             })
+
+            order._approval_refresh(
+                replace=True
+            )
 
             order.message_post(
                 body=_(
                     "Purchase document submitted for approval."
                 )
             )
+
+        return True
+
+    # ==========================================================
+    # APPROVE BUTTON ACTION
+    # ==========================================================
+
+    def action_approve(self):
+
+        self.ensure_one()
+
+        self._approval_matrix_approved(
+            self.env.user
+        )
 
         return True
 
@@ -442,4 +468,3 @@ class PurchaseOrder(models.Model):
             )
 
         return True
-    
