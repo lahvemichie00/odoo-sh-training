@@ -31,193 +31,277 @@
 
 
     <!-- ========================================================= -->
-    <!-- PURCHASE REQUEST FORM -->
-    <!-- ========================================================= -->
+<!-- PURCHASE REQUEST FORM -->
+<!-- ========================================================= -->
 
-    <record id="view_purchase_request_form" model="ir.ui.view">
-        <field name="name">purchase.request.form</field>
-        <field name="model">purchase.request</field>
-        <field name="arch" type="xml">
+<record id="view_purchase_request_form" model="ir.ui.view">
 
-            <form string="Purchase Request">
+    <field name="name">purchase.request.form</field>
 
-                <header>
+    <field name="model">purchase.request</field>
 
-                    <!-- CONFIRM -->
-                    <button name="action_confirm"
+    <field name="arch" type="xml">
+
+        <form string="Purchase Request">
+
+
+            <header>
+
+
+                <!-- CONFIRM -->
+
+                <button name="action_confirm"
+                        type="object"
+                        string="CONFIRM"
+                        class="oe_highlight"
+                        invisible="state != 'draft'"/>
+
+
+
+                <!-- APPROVE -->
+
+                <button name="action_approve"
+                        type="object"
+                        string="APPROVE"
+                        class="oe_highlight"
+                        invisible="state != 'waiting_approval' or not approval_can_current_user"/>
+
+
+
+                <!-- REJECT -->
+
+                <button name="action_open_approval_reject_wizard"
+                        type="object"
+                        string="REJECT"
+                        invisible="state != 'waiting_approval' or not approval_can_current_user"/>
+
+
+
+                <!-- RESUBMIT -->
+
+                <button name="action_resubmit"
+                        type="object"
+                        string="RESUBMIT"
+                        class="oe_highlight"
+                        invisible="state != 'reject'"/>
+
+
+
+                <!-- CANCEL -->
+
+                <button name="action_open_cancel_wizard"
+                        type="object"
+                        string="CANCEL"
+                        class="btn-secondary"
+                        invisible="state not in ('draft','waiting_approval','approved')"/>
+
+
+
+                <!-- CREATE RFQ -->
+
+                <button name="action_create_rfq"
+                        type="object"
+                        string="CREATE RFQ"
+                        class="oe_highlight"
+                        invisible="state != 'approved' or total_qty == 0"/>
+
+
+
+                <!-- CREATE PO -->
+
+                <button name="action_create_po"
+                        type="object"
+                        string="CREATE PO"
+                        class="oe_highlight"
+                        invisible="state != 'approved' or total_qty == 0"/>
+
+
+
+                <!-- STATUS -->
+
+                <field name="state"
+                       widget="statusbar"
+                       statusbar_visible="draft,waiting_approval,approved,reject,cancelled"/>
+
+
+            </header>
+
+
+
+            <sheet>
+
+
+                <!-- ================================================= -->
+                <!-- TECHNICAL FIELDS -->
+                <!-- ================================================= -->
+
+
+                <field name="approval_can_current_user"
+                       invisible="1"/>
+
+
+                <field name="approval_is_approved"
+                       invisible="1"/>
+
+
+                <field name="is_locked"
+                       invisible="1"/>
+
+
+
+                <!-- Smart button dependency -->
+
+                <field name="rfq_count"
+                       invisible="1"/>
+
+
+                <field name="po_count"
+                       invisible="1"/>
+                
+                <field name="total_qty"
+                       invisible="1"/>
+
+
+                <!-- ================================================= -->
+                <!-- SMART BUTTONS -->
+                <!-- ================================================= -->
+
+
+                <div class="oe_button_box"
+                     name="button_box">
+
+
+
+                    <!-- ============================================= -->
+                    <!-- RFQ SMART BUTTON -->
+                    <!-- ============================================= -->
+
+
+                    <button name="action_open_rfqs"
                             type="object"
-                            string="CONFIRM"
-                            class="oe_highlight"
-                            invisible="state != 'draft'"/>
+                            class="oe_stat_button"
+                            icon="fa-file-text-o"
+                            invisible="rfq_count == 0">
 
-                    <!-- APPROVE -->
-                    <button name="action_approve"
+
+                        <field name="rfq_count"
+                               widget="statinfo"
+                               string="RFQs"/>
+
+
+                    </button>
+
+
+
+
+
+                    <!-- ============================================= -->
+                    <!-- PURCHASE ORDER SMART BUTTON -->
+                    <!-- ============================================= -->
+
+
+                    <button name="action_open_purchase_orders"
                             type="object"
-                            string="APPROVE"
-                            class="oe_highlight"
-                            invisible="state != 'waiting_approval' or not approval_can_current_user"/>
-
-                    <!-- REJECT -->
-                    <button name="action_open_approval_reject_wizard"
-                            type="object"
-                            string="REJECT"
-                            invisible="state != 'waiting_approval' or not approval_can_current_user"/>
-
-                    <!-- RESUBMIT -->
-                    <button name="action_resubmit"
-                            type="object"
-                            string="RESUBMIT"
-                            class="oe_highlight"
-                            invisible="state != 'reject'"/>
-
-                    <!-- CANCEL -->
-                    <button name="action_open_cancel_wizard"
-                            type="object"
-                            string="CANCEL"
-                            class="btn-secondary"
-                            invisible="state not in ('draft', 'waiting_approval', 'approved')"/>
-
-                    <!-- CREATE RFQ -->
-                    <button name="action_create_rfq"
-                            type="object"
-                            string="CREATE RFQ"
-                            class="oe_highlight"
-                            invisible="state != 'approved'"/>
-
-                    <!-- CREATE PO -->
-                    <button name="action_create_po"
-                            type="object"
-                            string="CREATE PO"
-                            class="oe_highlight"
-                            invisible="state != 'approved'"/>
-
-                    <!-- STATUSBAR -->
-                    <field name="state"
-                           widget="statusbar"
-                           statusbar_visible="draft,waiting_approval,approved,reject,cancelled"/>
-
-                </header>
+                            class="oe_stat_button"
+                            icon="fa-shopping-cart"
+                            invisible="po_count == 0">
 
 
-                <sheet>
-
-                    <!-- ================================================= -->
-                    <!-- TECHNICAL FIELDS -->
-                    <!-- ================================================= -->
-
-                    <field name="approval_can_current_user"
-                           invisible="1"/>
-
-                    <field name="approval_is_approved"
-                           invisible="1"/>
-
-                    <field name="is_locked"
-                           invisible="1"/>
-
-                    <!-- Smart button count fields -->
-                    <field name="rfq_count"
-                           invisible="1"/>
-
-                    <field name="po_count"
-                           invisible="1"/>
+                        <field name="po_count"
+                               widget="statinfo"
+                               string="Purchase Orders"/>
 
 
-                    <!-- ================================================= -->
-                    <!-- SMART BUTTONS -->
-                    <!-- ================================================= -->
-
-                    <div class="oe_button_box" name="button_box">
-
-                        <!-- RFQ SMART BUTTON -->
-                        <button name="action_open_rfqs"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-file-text-o"
-                                invisible="rfq_count == 0">
-
-                            <field name="rfq_count"
-                                   widget="statinfo"
-                                   string="RFQs"/>
-
-                        </button>
+                    </button>
 
 
-                        <!-- PURCHASE ORDER SMART BUTTON -->
-                        <button name="action_open_purchase_orders"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-shopping-cart"
-                                invisible="po_count == 0">
 
-                            <field name="po_count"
-                                   widget="statinfo"
-                                   string="Purchase Orders"/>
-
-                        </button>
-
-                    </div>
+                </div>
 
 
-                    <!-- ================================================= -->
-                    <!-- TITLE -->
-                    <!-- ================================================= -->
-
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name"
-                                   readonly="1"/>
-                        </h1>
-                    </div>
 
 
-                    <!-- ================================================= -->
-                    <!-- HEADER INFORMATION -->
-                    <!-- ================================================= -->
+
+                <!-- ================================================= -->
+                <!-- TITLE -->
+                <!-- ================================================= -->
+
+
+                <div class="oe_title">
+
+                    <h1>
+
+                        <field name="name"
+                               readonly="1"/>
+
+                    </h1>
+
+                </div>
+
+
+
+
+
+                <!-- ================================================= -->
+                <!-- HEADER INFORMATION -->
+                <!-- ================================================= -->
+
+
+                <group>
+
 
                     <group>
 
-                        <group>
 
-                            <field name="user_id"
-                                   readonly="is_locked"/>
-
-                            <field name="employee_id"
-                                   readonly="is_locked"
-                                   options="{'no_create': True}"
-                                   invisible="1"/>
-
-                            <field name="department_id"
-                                   readonly="1"/>
-
-                            <field name="group_category_id"
-                                   readonly="is_locked"/>
-
-                        </group>
+                        <field name="user_id"
+                               readonly="is_locked"/>
 
 
-                        <group>
+                        <field name="employee_id"
+                               readonly="is_locked"
+                               options="{'no_create': True}"
+                               invisible="1"/>
 
-                            <field name="date_order"
-                                   string="Requestion Date"
-                                   readonly="is_locked"/>
 
-                            <field name="create_date"
-                                   string="Created on"
-                                   readonly="1"/>
+                        <field name="department_id"
+                               readonly="1"/>
 
-                            <field name="company_id"
-                                   readonly="is_locked"/>
 
-                        </group>
+                        <field name="group_category_id"
+                               readonly="is_locked"/>
+
 
                     </group>
 
 
-                    <!-- ================================================= -->
-                    <!-- NOTEBOOK -->
-                    <!-- ================================================= -->
 
-                    <notebook>
+                    <group>
+
+
+                        <field name="date_order"
+                               string="Request Date"
+                               readonly="is_locked"/>
+
+
+                        <field name="create_date"
+                               string="Created on"
+                               readonly="1"/>
+
+
+                        <field name="company_id"
+                               readonly="is_locked"/>
+
+
+                    </group>
+
+
+                </group>
+
+                <!-- ================================================= -->
+                <!-- NOTEBOOK -->
+                <!-- ================================================= -->
+
+                <notebook>
 
 
                         <!-- ============================================= -->
