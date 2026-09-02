@@ -369,6 +369,13 @@ class PurchaseOrder(models.Model):
 
     def button_confirm(self):
 
+        # Allow Odoo installation/demo data
+        if (
+            self.env.context.get("install_mode")
+            or self.env.context.get("module")
+        ):
+            return super().button_confirm()
+
         for order in self:
 
             if order.approval_stage in ("rfq", "po"):
