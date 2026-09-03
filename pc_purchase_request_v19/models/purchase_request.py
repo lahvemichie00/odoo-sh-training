@@ -465,6 +465,89 @@ class PurchaseRequest(models.Model):
         return super().write(vals)
 
     # ======================================================
+    # OPEN RFQ SMART BUTTON
+    # ======================================================
+
+    def action_open_rfqs(self):
+
+        self.ensure_one()
+
+        rfqs = self.env["purchase.order"].search(
+            [
+                (
+                    "order_line.purchase_request_line_id",
+                    "in",
+                    self.line_ids.ids,
+                ),
+                (
+                    "approval_stage",
+                    "=",
+                    "rfq",
+                ),
+            ]
+        )
+
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("RFQ"),
+
+            "res_model": "purchase.order",
+
+            "view_mode": "list,form",
+
+            "domain": [
+                (
+                    "id",
+                    "in",
+                    rfqs.ids,
+                )
+            ],
+        }
+
+    # ======================================================
+    # OPEN PURCHASE ORDER SMART BUTTON
+    # ======================================================
+
+    def action_open_purchase_orders(self):
+
+        self.ensure_one()
+
+        orders = self.env["purchase.order"].search(
+            [
+                (
+                    "order_line.purchase_request_line_id",
+                    "in",
+                    self.line_ids.ids,
+                ),
+                (
+                    "approval_stage",
+                    "=",
+                    "po",
+                ),
+            ]
+        )
+
+
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("Purchase Orders"),
+
+            "res_model": "purchase.order",
+
+            "view_mode": "list,form",
+
+            "domain": [
+                (
+                    "id",
+                    "in",
+                    orders.ids,
+                )
+            ],
+        }
+
+    # ======================================================
     # DELETE
     # ======================================================
 
