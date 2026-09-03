@@ -10,7 +10,7 @@
         <field name="model">purchase.request</field>
         <field name="arch" type="xml">
             <list decoration-info="state == 'waiting_approval'"
-                  decoration-success="state == 'approved'"
+                  decoration-success="state in ('approved','completed')"
                   decoration-danger="state in ('reject', 'cancelled')">
 
                 <field name="name"/>
@@ -22,9 +22,8 @@
                 <field name="state"
                        widget="badge"
                        decoration-info="state == 'waiting_approval'"
-                       decoration-success="state == 'approved'"
+                       decoration-success="state in ('approved','completed')"
                        decoration-danger="state in ('reject', 'cancelled')"/>
-
             </list>
         </field>
     </record>
@@ -103,7 +102,7 @@
                         type="object"
                         string="CREATE RFQ"
                         class="oe_highlight"
-                        invisible="state != 'approved' or total_qty == 0"/>
+                        invisible="state != 'approved'"/>
 
 
 
@@ -113,7 +112,7 @@
                         type="object"
                         string="CREATE PO"
                         class="oe_highlight"
-                        invisible="state != 'approved' or total_qty == 0"/>
+                        invisible="state != 'approved'"/>
 
 
 
@@ -121,7 +120,7 @@
 
                 <field name="state"
                        widget="statusbar"
-                       statusbar_visible="draft,waiting_approval,approved,reject,cancelled"/>
+                       statusbar_visible="draft,waiting_approval,approved,reject,cancelled,completed"/>
 
 
             </header>
@@ -218,10 +217,6 @@
 
                 </div>
 
-
-
-
-
                 <!-- ================================================= -->
                 <!-- TITLE -->
                 <!-- ================================================= -->
@@ -230,17 +225,16 @@
                 <div class="oe_title">
 
                     <h1>
-
                         <field name="name"
                                readonly="1"/>
-
                     </h1>
+                    
+                    <field name="state"
+                           widget="badge"
+                           decoration-success="state == 'completed'"
+                           invisible="state != 'completed'"/>
 
                 </div>
-
-
-
-
 
                 <!-- ================================================= -->
                 <!-- HEADER INFORMATION -->
@@ -319,15 +313,13 @@
                                     <!-- ================================= -->
 
                                     <field name="selected_for_purchase"
-                                           invisible="parent.state != 'approved'"/>
-
+                                           readonly="state == 'done'"/>
 
                                     <!-- ================================= -->
                                     <!-- ITEM CODE -->
                                     <!-- ================================= -->
 
                                     <field name="default_code"/>
-
 
                                     <!-- ================================= -->
                                     <!-- PRODUCT -->
@@ -383,6 +375,12 @@
                                     <field name="incoming_qty"
                                            readonly="1"/>
 
+
+                                    <field name="state"
+                                           string="Line Status"
+                                           widget="badge"
+                                           decoration-success="state == 'done'"
+                                           decoration-danger="state == 'cancel'"/>
 
                                     <!-- ================================= -->
                                     <!-- REASON -->

@@ -88,6 +88,7 @@ class PurchaseRequest(models.Model):
             ("approved", "Approved"),
             ("reject", "Reject"),
             ("cancelled", "Cancelled"),
+            ("completed", "Completed"),
         ],
         default="draft",
         required=True,
@@ -810,6 +811,43 @@ class PurchaseRequest(models.Model):
 
         return True
 
+
+    # ==========================================================
+    # CHECK COMPLETED
+    # ==========================================================
+
+    def _check_completed(self):
+
+        for request in self:
+
+            if request.state != "approved":
+                continue
+
+            if not request.line_ids:
+                continue
+
+            completed_lines = request.line_ids.filtered(
+                lambda line: line.state == "done"
+            )
+
+            if len(completed_lines) == len(request.line_ids):
+
+                request.with_context(
+                    skip_request_workflow=True
+                ).write(
+                    {
+                        "state": "completed",
+                    }
+                )
+
+                request.message_post(
+                    body=_(
+                        "Purchase Request completed."
+                    )
+                )
+
+        return True
+
     # ==========================================================
     # CREATE RFQ
     # ==========================================================
@@ -817,6 +855,14 @@ class PurchaseRequest(models.Model):
     def action_create_rfq(self):
 
         self.ensure_one()
+
+        if self.state != "approved":
+            raise UserError(
+                _(
+                    "Only approved Purchase Requests "
+                    "can create RFQ."
+                )
+            )
 
         selected_lines = self.line_ids.filtered(
             lambda line:
@@ -827,7 +873,21 @@ class PurchaseRequest(models.Model):
             raise UserError(
                 _(
                     "Please select at least one item "
-                    "with remaining quantity to create RFQ."
+                    "to create RFQ."
+                )
+            )
+
+        used_lines = selected_lines.filtered(
+            lambda line:
+            line.state == "done"
+            or line.is_purchased
+        )
+
+        if used_lines:
+            raise UserError(
+                _(
+                    "One or more selected items "
+                    "have already been used."
                 )
             )
 
@@ -844,6 +904,14 @@ class PurchaseRequest(models.Model):
 
         self.ensure_one()
 
+        if self.state != "approved":
+            raise UserError(
+                _(
+                    "Only approved Purchase Requests "
+                    "can create Purchase Orders."
+                )
+            )
+
         selected_lines = self.line_ids.filtered(
             lambda line:
             line.selected_for_purchase
@@ -853,7 +921,21 @@ class PurchaseRequest(models.Model):
             raise UserError(
                 _(
                     "Please select at least one item "
-                    "with remaining quantity to create PO."
+                    "to create Purchase Order."
+                )
+            )
+
+        used_lines = selected_lines.filtered(
+            lambda line:
+            line.state == "done"
+            or line.is_purchased
+        )
+
+        if used_lines:
+            raise UserError(
+                _(
+                    "One or more selected items "
+                    "have already been used."
                 )
             )
 
@@ -874,23 +956,17 @@ class PurchaseRequest(models.Model):
 
         self.ensure_one()
 
-        for line in selected_lines:
-            line._validate_for_order()
-
         if not selected_lines:
             raise UserError(
                 _("No selected items found.")
             )
 
+        for line in selected_lines:
+            line._validate_for_order()
+
         order_lines = []
 
         for line in selected_lines:
-
-            purchase_qty = line.qty
-
-            # --------------------------------------------------
-            # UOM SAFETY CHECK
-            # --------------------------------------------------
 
             product_uom = (
                 line.product_uom_id
@@ -910,23 +986,15 @@ class PurchaseRequest(models.Model):
                     0,
                     0,
                     {
-                        "product_id": (
-                            line.product_id.id
-                        ),
+                        "product_id": line.product_id.id,
                         "name": (
                             line.desc
                             or line.product_id.display_name
                         ),
-                        "product_qty": purchase_qty,
-                        "product_uom_id": (
-                            product_uom.id
-                        ),
-                        "date_planned": (
-                            fields.Datetime.now()
-                        ),
-                        "purchase_request_line_id": (
-                            line.id
-                        ),
+                        "product_qty": line.qty,
+                        "product_uom_id": product_uom.id,
+                        "date_planned": fields.Datetime.now(),
+                        "purchase_request_line_id": line.id,
                     },
                 )
             )
@@ -943,24 +1011,10 @@ class PurchaseRequest(models.Model):
             "target": "current",
             "context": {
                 "default_origin": self.name,
-
-                "default_company_id": (
-                    self.company_id.id
-                ),
-
+                "default_company_id": self.company_id.id,
                 "default_order_line": order_lines,
 
-
-                # --------------------------------------------------
-                # Purchase Request source
-                # --------------------------------------------------
-
                 "from_purchase_request": True,
-
-
-                # --------------------------------------------------
-                # Approval stage
-                # --------------------------------------------------
 
                 "default_approval_stage": (
                     "po"
@@ -970,18 +1024,10 @@ class PurchaseRequest(models.Model):
 
                 "default_approval_state": "draft",
 
-
-                # --------------------------------------------------
-                # IMPORTANT
-                # Preserve RFQ / PO choice
-                # --------------------------------------------------
-
                 "pr_confirm_order": confirm,
-
                 "default_confirm_order": confirm,
             },
         }
-
 
 # =================================================================
 # PURCHASE REQUEST LINE
@@ -1014,6 +1060,22 @@ class PurchaseRequestLine(models.Model):
         default=False,
         tracking=True,
     )
+
+    is_purchased = fields.Boolean(
+        string="Already Used",
+        compute="_compute_is_purchased",
+    )
+
+    @api.depends(
+        "purchase_line_ids",
+        "purchase_line_ids.order_id",
+    )
+    def _compute_is_purchased(self):
+
+        for line in self:
+            line.is_purchased = bool(
+                line.purchase_line_ids
+            )
 
     product_id = fields.Many2one(
         "product.product",
@@ -1092,11 +1154,9 @@ class PurchaseRequestLine(models.Model):
     # PURCHASE DOCUMENT RELATION
     # ==========================================================
 
-    purchase_line_ids = fields.Many2many(
+    purchase_line_ids = fields.One2many(
         "purchase.order.line",
-        "purchase_request_line_prl_rel",
-        "pr_line_id",
-        "purchase_line_id",
+        "purchase_request_line_id",
         string="Purchase Order Lines",
         copy=False,
     )
@@ -1221,7 +1281,7 @@ class PurchaseRequestLine(models.Model):
                 line.product_id.incoming_qty
             )
 
-    # ==========================================================
+        # ==========================================================
     # SELECTION VALIDATION
     # ==========================================================
 
@@ -1230,21 +1290,39 @@ class PurchaseRequestLine(models.Model):
 
         for line in self:
 
-            if line.selected_for_purchase:
+            if not line.selected_for_purchase:
+                continue
 
-                if (
-                    line.purchase_request_id.state
-                    != "approved"
-                ):
-                    raise ValidationError(
-                        _(
-                            "Only approved purchase "
-                            "requests can select items "
-                            "for RFQ or PO."
-                        )
+            if (
+                line.purchase_request_id.state
+                != "approved"
+            ):
+                raise ValidationError(
+                    _(
+                        "Only approved Purchase Requests "
+                        "can select items for RFQ or PO."
                     )
+                )
 
-    # ==========================================================
+            if (
+                line.state == "done"
+                or line.is_purchased
+            ):
+                raise ValidationError(
+                    _(
+                        "This item has already been used "
+                        "for RFQ or PO."
+                    )
+                )
+
+            if line.state == "cancel":
+                raise ValidationError(
+                    _(
+                        "Cancelled items cannot be selected."
+                    )
+                )
+
+        # ==========================================================
     # VALIDATE FOR RFQ / PO
     # ==========================================================
 
@@ -1258,8 +1336,8 @@ class PurchaseRequestLine(models.Model):
             ):
                 raise UserError(
                     _(
-                        "Only approved purchase "
-                        "requests can create RFQ or PO."
+                        "Only approved Purchase Requests "
+                        "can create RFQ or PO."
                     )
                 )
 
@@ -1274,14 +1352,21 @@ class PurchaseRequestLine(models.Model):
             if line.state == "cancel":
                 raise UserError(
                     _(
-                        "Cancelled purchase request "
+                        "Cancelled Purchase Request "
                         "lines cannot create RFQ or PO."
                     )
                 )
 
-            # --------------------------------------------------
-            # UOM validation
-            # --------------------------------------------------
+            if (
+                line.state == "done"
+                or line.is_purchased
+            ):
+                raise UserError(
+                    _(
+                        "This item has already been used "
+                        "for RFQ or PO."
+                    )
+                )
 
             if (
                 not line.product_uom_id
@@ -1293,6 +1378,8 @@ class PurchaseRequestLine(models.Model):
                     )
                     % line.product_id.display_name
                 )
+
+        return True
 
     # ==========================================================
     # OPEN CREATE ORDER WIZARD
@@ -1344,7 +1431,48 @@ class PurchaseRequestLine(models.Model):
         )
 
         return True
+    
+# ==========================================================
+# LOCK COMPLETED PURCHASE REQUEST LINE
+# ==========================================================
 
+def write(self, vals):
+
+    protected_fields = {
+        "product_id",
+        "desc",
+        "qty",
+        "product_uom_id",
+        "request_eta",
+        "purchase_message",
+        "selected_for_purchase",
+    }
+
+
+    if (
+        protected_fields.intersection(vals)
+        and not self.env.context.get(
+            "skip_pr_line_lock"
+        )
+    ):
+
+        locked_lines = self.filtered(
+            lambda line:
+            line.state == "done"
+        )
+
+
+        if locked_lines:
+
+            raise UserError(
+                _(
+                    "Completed Purchase Request "
+                    "items cannot be edited or reused."
+                )
+            )
+
+
+    return super().write(vals)
 
 # ==========================================================
 # PURCHASE ORDER LINE
@@ -1374,15 +1502,63 @@ class PurchaseOrderLine(models.Model):
 
         lines = super().create(vals_list)
 
+        pr_lines = lines.mapped(
+            "purchase_request_line_id"
+        )
+
+        if pr_lines:
+
+            pr_lines.with_context(
+                skip_pr_line_lock=True
+            ).write(
+                {
+                    "selected_for_purchase": False,
+                    "state": "done",
+                }
+            )
+
+            requests = pr_lines.mapped(
+                "purchase_request_id"
+            )
+
+            requests._check_completed()
+
         return lines
 
 
     # ==========================================================
-    # EDIT PURCHASE ORDER LINE
+    # LOCK COMPLETED LINE
     # ==========================================================
 
     def write(self, vals):
 
-        result = super().write(vals)
+        protected_fields = {
+            "product_id",
+            "desc",
+            "qty",
+            "product_uom_id",
+            "request_eta",
+            "purchase_message",
+            "selected_for_purchase",
+        }
 
-        return result
+        if (
+            protected_fields.intersection(vals)
+            and not self.env.context.get(
+                "skip_pr_line_lock"
+            )
+        ):
+
+            if self.filtered(
+                lambda line:
+                line.state == "done"
+            ):
+                raise UserError(
+                    _(
+                        "Completed Purchase Request "
+                        "items cannot be edited or reused."
+                    )
+                )
+
+        return super().write(vals)
+    
