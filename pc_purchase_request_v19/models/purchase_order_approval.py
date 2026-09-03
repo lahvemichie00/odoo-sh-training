@@ -9,19 +9,6 @@ class PurchaseOrder(models.Model):
         "approval.matrix.mixin",
     ]
 
-
-    # ==========================================================
-    # RFQ REFERENCE
-    # ==========================================================
-
-    rfq_number = fields.Char(
-        string="RFQ Reference",
-        copy=False,
-        readonly=True,
-        tracking=True,
-    )
-
-
     # ==========================================================
     # APPROVAL STAGE
     # ==========================================================
@@ -56,44 +43,6 @@ class PurchaseOrder(models.Model):
         copy=False,
         tracking=True,
     )
-
-
-    # ==========================================================
-    # SOURCE RFQ
-    # ==========================================================
-
-    source_rfq_id = fields.Many2one(
-        "purchase.order",
-        string="Source RFQ",
-        readonly=True,
-        copy=False,
-        ondelete="set null",
-    )
-
-
-    converted_po_ids = fields.One2many(
-        "purchase.order",
-        "source_rfq_id",
-        string="Converted Purchase Orders",
-    )
-
-
-    converted_po_count = fields.Integer(
-        string="Purchase Order Count",
-        compute="_compute_converted_po_count",
-    )
-
-
-    @api.depends("converted_po_ids")
-    def _compute_converted_po_count(self):
-
-        for order in self:
-
-            order.converted_po_count = len(
-                order.converted_po_ids
-            )
-
-
 
     # ==========================================================
     # PURCHASE REQUEST SMART BUTTON
@@ -173,159 +122,6 @@ class PurchaseOrder(models.Model):
             "target": "current",
         }
 
-
-
-    # ==========================================================
-    # OPEN SOURCE RFQ
-    # ==========================================================
-
-    def action_open_source_rfq(self):
-
-        self.ensure_one()
-
-        if not self.source_rfq_id:
-            return False
-
-
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("RFQ"),
-            "res_model": "purchase.order",
-            "view_mode": "form",
-            "res_id": self.source_rfq_id.id,
-            "target": "current",
-        }
-
-
-
-    # ==========================================================
-    # OPEN CONVERTED PO
-    # ==========================================================
-
-    def action_open_converted_purchase_orders(self):
-
-        self.ensure_one()
-
-        orders = self.converted_po_ids
-
-
-        if not orders:
-            return False
-
-
-        if len(orders) == 1:
-
-            return {
-                "type": "ir.actions.act_window",
-                "name": _("Purchase Order"),
-                "res_model": "purchase.order",
-                "view_mode": "form",
-                "res_id": orders.id,
-                "target": "current",
-            }
-
-
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Purchase Orders"),
-            "res_model": "purchase.order",
-            "view_mode": "list,form",
-            "domain": [
-                ("id", "in", orders.ids),
-            ],
-            "target": "current",
-        }
-
-        # ==========================================================
-    # CONVERT RFQ TO PO
-    # ==========================================================
-
-    def action_convert_to_po(self):
-
-        self.ensure_one()
-
-
-        if self.approval_stage != "rfq":
-
-            raise UserError(
-                _(
-                    "Only RFQ can be converted "
-                    "to Purchase Order."
-                )
-            )
-
-
-        if self.approval_state != "approved":
-
-            raise UserError(
-                _(
-                    "RFQ must be approved before "
-                    "converting to PO."
-                )
-            )
-
-
-        po = self.with_context(
-            from_purchase_request=True
-        ).copy(
-            {
-                "approval_stage": "po",
-                "approval_state": "draft",
-                "source_rfq_id": self.id,
-                "rfq_number": False,
-                "origin": self.name,
-                "approval_document_ids": False,
-            }
-        )
-
-
-        # ------------------------------------------------------
-        # Link Purchase Request Line
-        # ------------------------------------------------------
-
-        for old_line, new_line in zip(
-            self.order_line,
-            po.order_line,
-        ):
-
-            new_line.purchase_request_line_id = (
-                old_line.purchase_request_line_id.id
-            )
-
-
-        # ------------------------------------------------------
-        # Create new approval chain
-        # ------------------------------------------------------
-
-        po._approval_refresh(
-            replace=True
-        )
-
-
-        po.write({
-            "approval_state": "waiting_approval"
-        })
-
-
-        po.message_post(
-            body=_(
-                "Purchase Order created from RFQ %s."
-            )
-            % self.display_name
-        )
-
-
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Purchase Order"),
-            "res_model": "purchase.order",
-            "view_mode": "form",
-            "res_id": po.id,
-            "target": "current",
-        }
-
-
-
     # ==========================================================
     # CREATE PURCHASE ORDER / RFQ
     # ==========================================================
@@ -376,75 +172,26 @@ class PurchaseOrder(models.Model):
 
 
             # --------------------------------------------------
-            # Block Manual Creation
+            # Block Manual RFQ / PO Creation
+            # Only allowed from Purchase Request
             # --------------------------------------------------
 
             if (
-                not context.get(
-                    "from_purchase_request"
-                )
-                and not context.get(
-                    "install_mode"
-                )
+                not context.get("from_purchase_request")
+                and not context.get("install_mode")
+                and not context.get("module")
+                and not context.get("import_file")
             ):
-
                 raise UserError(
                     _(
-                        "Purchase Order / RFQ must "
-                        "be created from Purchase Request."
+                         "Purchase Order / RFQ must be created "
+                         "from an approved Purchase Request."
                     )
                 )
 
-
-        orders = super().create(
-            vals_list
-        )
-
+        orders = super().create(vals_list)
 
         return orders
-
-
-
-    # ==========================================================
-    # CONFIRM PURCHASE ORDER / RFQ
-    # ==========================================================
-
-    def button_confirm(self):
-
-
-        if (
-            self.env.context.get("install_mode")
-            or self.env.context.get("install_demo")
-            or self.env.context.get("module")
-        ):
-
-            return super().button_confirm()
-
-
-
-        for order in self:
-
-
-            if order.approval_stage in (
-                "rfq",
-                "po",
-            ):
-
-
-                if order.approval_state != "approved":
-
-
-                    raise UserError(
-                        _(
-                            "Purchase document must "
-                            "be approved before confirmation."
-                        )
-                    )
-
-
-        return super().button_confirm()
-
-
 
     # ==========================================================
     # SUBMIT FOR APPROVAL
@@ -489,7 +236,28 @@ class PurchaseOrder(models.Model):
 
         return True
 
-        # ==========================================================
+    # ==========================================================
+    # CONFIRM PURCHASE ORDER
+    # ==========================================================
+
+    def button_confirm(self):
+
+        for order in self:
+
+            if order.approval_stage == "po":
+
+                if order.approval_state != "approved":
+
+                    raise UserError(
+                        _(
+                            "Purchase Order must be approved "
+                            "before confirmation."
+                        )
+                    )
+
+        return super().button_confirm()
+    
+    # ==========================================================
     # APPROVE BUTTON ACTION
     # ==========================================================
 
