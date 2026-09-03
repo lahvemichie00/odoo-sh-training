@@ -143,11 +143,6 @@
                        invisible="1"/>
 
 
-                <field name="is_locked"
-                       invisible="1"/>
-
-
-
                 <!-- Smart button dependency -->
 
                 <field name="rfq_count"
@@ -248,11 +243,11 @@
 
 
                         <field name="user_id"
-                               readonly="is_locked"/>
+                               readonly="state not in ('draft','reject')"/>
 
 
                         <field name="employee_id"
-                               readonly="is_locked"
+                               readonly="state not in ('draft','reject')"
                                options="{'no_create': True}"
                                invisible="1"/>
 
@@ -262,7 +257,7 @@
 
 
                         <field name="group_category_id"
-                               readonly="is_locked"/>
+                               readonly="state not in ('draft','reject')"/>
 
 
                     </group>
@@ -274,7 +269,7 @@
 
                         <field name="date_order"
                                string="Request Date"
-                               readonly="is_locked"/>
+                               readonly="state not in ('draft','reject')"/>
 
 
                         <field name="create_date"
@@ -283,7 +278,7 @@
 
 
                         <field name="company_id"
-                               readonly="is_locked"/>
+                               readonly="state not in ('draft','reject')"/>
 
 
                     </group>
