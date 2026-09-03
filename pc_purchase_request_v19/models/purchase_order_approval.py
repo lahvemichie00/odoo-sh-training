@@ -309,47 +309,48 @@ class PurchaseOrder(models.Model):
         }
     
 
-    # ==========================================================
-    # CREATE PURCHASE ORDER / RFQ
-    # ==========================================================
+# ==========================================================
+# CREATE PURCHASE ORDER / RFQ
+# ==========================================================
 
-    @api.model
-    def create(self, vals):
+@api.model_create_multi
+def create(self, vals_list):
 
-        context = self.env.context
+    context = self.env.context
 
+    for vals in vals_list:
 
         # --------------------------------------------------
         # Set Approval Stage
         # --------------------------------------------------
 
         if context.get("default_approval_stage"):
+
             vals.update({
                 "approval_stage": context.get(
                     "default_approval_stage"
                 )
             })
 
-
         # --------------------------------------------------
         # Set Approval State
         # --------------------------------------------------
 
         if context.get("default_approval_state"):
+
             vals.update({
                 "approval_state": context.get(
                     "default_approval_state"
                 )
             })
 
-
         # --------------------------------------------------
         # Block Manual RFQ / PO Creation
         # --------------------------------------------------
 
         if (
-            not self.env.context.get("from_purchase_request")
-            and not self.env.context.get("install_mode")
+            not context.get("from_purchase_request")
+            and not context.get("install_mode")
         ):
 
             raise UserError(
@@ -359,9 +360,9 @@ class PurchaseOrder(models.Model):
                 )
             )
 
-        order = super().create(vals)
+    orders = super().create(vals_list)
 
-        return order
+    return orders
     
     # ==========================================================
     # CONFIRM PURCHASE ORDER / RFQ
