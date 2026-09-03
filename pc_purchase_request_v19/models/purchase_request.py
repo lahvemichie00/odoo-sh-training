@@ -776,37 +776,37 @@ class PurchaseRequest(models.Model):
 
         return True
 
-# ======================================================
-# OPEN CANCEL WIZARD
-# ======================================================
+    # ======================================================
+    # OPEN CANCEL WIZARD
+    # ======================================================
 
-def action_open_cancel_wizard(self):
+    def action_open_cancel_wizard(self):
 
-    self.ensure_one()
+        self.ensure_one()
 
-    if self.state not in (
-        "draft",
-        "waiting_approval",
-        "approved",
-    ):
-        raise UserError(
-            _(
-                "Only Draft, Waiting Approval "
-                "or Approved Purchase Requests "
-                "can be cancelled."
+        if self.state not in (
+            "draft",
+            "waiting_approval",
+            "approved",
+        ):
+            raise UserError(
+                _(
+                    "Only Draft, Waiting Approval "
+                    "or Approved Purchase Requests "
+                    "can be cancelled."
+                )
             )
-        )
 
-    return {
-        "type": "ir.actions.act_window",
-        "name": _("Cancel Purchase Request"),
-        "res_model": "purchase.request.cancel.wizard",
-        "view_mode": "form",
-        "target": "new",
-        "context": {
-            "default_purchase_request_id": self.id,
-        },
-    }
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Cancel Purchase Request"),
+            "res_model": "purchase.request.cancel.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_purchase_request_id": self.id,
+            },
+        }
 
     # ======================================================
     # CANCEL
