@@ -131,67 +131,58 @@ class PurchaseOrder(models.Model):
 
         context = self.env.context
 
+        # ======================================================
+        # BLOCK MANUAL RFQ / PO CREATION
+        # ONLY FROM PURCHASE REQUEST
+        # ======================================================
+
+        if not context.get("from_purchase_request"):
+
+            raise UserError(
+                _(
+                    "Purchase Order / RFQ must be created from Purchase Request."
+                )
+            )
+
+
+        # ======================================================
+        # APPLY APPROVAL VALUES FROM CONTEXT
+        # ======================================================
 
         for vals in vals_list:
 
 
             # --------------------------------------------------
-            # Set Approval Stage
+            # Approval Stage
             # --------------------------------------------------
 
             if context.get(
                 "default_approval_stage"
             ):
 
-                vals.update(
-                    {
-                        "approval_stage":
-                            context.get(
-                                "default_approval_stage"
-                            )
-                    }
+                vals["approval_stage"] = (
+                    context.get(
+                        "default_approval_stage"
+                    )
                 )
 
 
             # --------------------------------------------------
-            # Set Approval State
+            # Approval State
             # --------------------------------------------------
 
             if context.get(
                 "default_approval_state"
             ):
 
-                vals.update(
-                    {
-                        "approval_state":
-                            context.get(
-                                "default_approval_state"
-                            )
-                    }
-                )
-
-
-            # --------------------------------------------------
-            # Block Manual RFQ / PO Creation
-            # Only allowed from Purchase Request
-            # --------------------------------------------------
-
-            if (
-                not context.get("from_purchase_request")
-                and not context.get("install_mode")
-                and not context.get("module")
-                and not context.get("import_file")
-            ):
-                raise UserError(
-                    _(
-                         "Purchase Order / RFQ must be created "
-                         "from an approved Purchase Request."
+                vals["approval_state"] = (
+                    context.get(
+                        "default_approval_state"
                     )
                 )
 
-        orders = super().create(vals_list)
 
-        return orders
+        return super().create(vals_list)
 
     # ==========================================================
     # SUBMIT FOR APPROVAL
@@ -244,36 +235,22 @@ class PurchaseOrder(models.Model):
 
         for order in self:
 
-            if order.approval_stage == "po":
+            if order.approval_stage in (
+                "rfq",
+                "po",
+            ):
 
                 if order.approval_state != "approved":
 
                     raise UserError(
                         _(
-                            "Purchase Order must be approved "
+                            "Purchase document must be approved "
                             "before confirmation."
                         )
                     )
 
         return super().button_confirm()
     
-    # ==========================================================
-    # APPROVE BUTTON ACTION
-    # ==========================================================
-
-    def action_approve(self):
-
-        self.ensure_one()
-
-
-        self._approval_matrix_approved(
-            self.env.user
-        )
-
-
-        return True
-
-
 
     # ==========================================================
     # APPROVAL COMPLETED
