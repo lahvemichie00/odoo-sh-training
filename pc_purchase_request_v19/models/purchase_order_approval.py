@@ -4,10 +4,7 @@ from odoo.exceptions import UserError
 
 class PurchaseOrder(models.Model):
 
-    _inherit = [
-        "purchase.order",
-        "approval.matrix.mixin",
-    ]
+    _inherit = "purchase.order"
 
     # ==========================================================
     # APPROVAL STAGE
@@ -226,6 +223,17 @@ class PurchaseOrder(models.Model):
 
 
         return True
+
+    def action_approve(self):
+
+        self.ensure_one()
+
+        if self.approval_state != "waiting_approval":
+            raise UserError(
+                _("Purchase Order is not waiting for approval.")
+            )
+
+        return self._approval_action_approve()
 
     # ==========================================================
     # CONFIRM PURCHASE ORDER
