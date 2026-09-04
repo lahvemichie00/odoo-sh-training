@@ -1335,6 +1335,13 @@ class PurchaseRequestLine(models.Model):
         tracking=True,
     )
 
+    pr_line_state = fields.Selection(
+        related="purchase_request_id.state",
+        string="PR Status",
+        store=True,
+        readonly=True,
+    )
+
 
 
     company_id = fields.Many2one(
