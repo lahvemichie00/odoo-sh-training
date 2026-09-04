@@ -41,7 +41,8 @@
                 <!-- ================================================= -->
                 <!-- SOURCE RFQ SMART BUTTON -->
                 <!-- ================================================= -->
-
+                
+                <!--
                 <button name="action_open_source_rfq"
                         type="object"
                         class="oe_stat_button"
@@ -53,11 +54,12 @@
                            string="Source RFQ"/>
 
                 </button>
+                -->
 
                 <!-- ================================================= -->
                 <!-- CONVERTED PO SMART BUTTON -->
                 <!-- ================================================= -->
-
+                <!--
                 <button name="action_open_converted_purchase_orders"
                         type="object"
                         class="oe_stat_button"
@@ -68,9 +70,8 @@
                            widget="statinfo"
                            string="Purchase Orders"/>
 
-                </button>
-
-
+                </button> 
+                -->
             </xpath>
 
             <!-- ===================================================== -->
@@ -194,7 +195,7 @@
                        invisible="1"/>
 
 
-
+                <!--
                 <field name="source_rfq_id"
                        invisible="1"/>
 
@@ -207,7 +208,7 @@
 
                 <field name="converted_po_count"
                        invisible="1"/>
-
+                -->
 
             </xpath>
 
