@@ -4,7 +4,10 @@ from odoo.exceptions import UserError
 
 class PurchaseOrder(models.Model):
 
-    _inherit = "purchase.order"
+    _inherit = [
+        "purchase.order",
+        "approval.matrix.mixin",
+    ]
 
     # ==========================================================
     # APPROVAL STAGE
