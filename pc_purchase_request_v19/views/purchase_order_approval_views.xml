@@ -98,6 +98,7 @@
                         invisible="approval_state != 'waiting_approval'
                                    or not approval_can_current_user"/>
 
+                <!--
                 <button name="action_convert_to_po"
                         type="object"
                         string="CONVERT TO PO"
@@ -105,6 +106,7 @@
                         invisible="approval_stage != 'rfq'
                                    or approval_state != 'approved'
                                    or converted_po_count > 0"/>
+                -->
 
             </xpath>
 
