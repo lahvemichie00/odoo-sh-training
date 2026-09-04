@@ -1267,6 +1267,25 @@ class PurchaseRequestLine(models.Model):
     )
 
 
+    # ======================================================
+    # STOCK INFORMATION
+    # ======================================================
+
+    stock_on_hand = fields.Float(
+        string="On Hand",
+        related="product_id.qty_available",
+        store=False,
+        readonly=True,
+    )
+
+
+    incoming_qty = fields.Float(
+        string="Incoming",
+        related="product_id.incoming_qty",
+        store=False,
+        readonly=True,
+    )
+
 
     product_uom_id = fields.Many2one(
         "uom.uom",
