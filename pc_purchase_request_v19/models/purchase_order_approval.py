@@ -246,21 +246,14 @@ class PurchaseOrder(models.Model):
 
     def button_confirm(self):
 
+        if self.env.context.get('install_demo'):
+            return super().button_confirm()
+
         for order in self:
-
-            if order.approval_stage in (
-                "rfq",
-                "po",
-            ):
-
-                if order.approval_state != "approved":
-
-                    raise UserError(
-                        _(
-                            "Purchase document must be approved "
-                            "before confirmation."
-                        )
-                    )
+            if order.approval_state != 'approved':
+                raise UserError(
+                    _("Purchase document must be approved before confirmation.")
+                )
 
         return super().button_confirm()
     
