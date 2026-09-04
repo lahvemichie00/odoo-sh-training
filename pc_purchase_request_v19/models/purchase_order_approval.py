@@ -136,12 +136,14 @@ class PurchaseOrder(models.Model):
         # ONLY FROM PURCHASE REQUEST
         # ======================================================
 
-        if not context.get("from_purchase_request"):
+        if (
+            not context.get("from_purchase_request")
+            and not context.get("install_demo")
+            and not self.env.context.get("module_uninstall")
+        ):
 
             raise UserError(
-                _(
-                    "Purchase Order / RFQ must be created from Purchase Request."
-                )
+                _("Purchase Order / RFQ must be created from Purchase Request.")
             )
 
 
