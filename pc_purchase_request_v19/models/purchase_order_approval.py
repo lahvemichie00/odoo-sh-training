@@ -106,8 +106,10 @@ class PurchaseOrder(models.Model):
     # ==========================================================
 
     @api.depends(
-        "order_line.purchase_request_line_id"
+        "order_line.purchase_request_line_id.purchase_request_id",
+        "purchase_document_type",
     )
+
     def _compute_purchase_request_ids(self):
 
         for order in self:
@@ -127,22 +129,29 @@ class PurchaseOrder(models.Model):
     # ==========================================================
 
     @api.depends(
-        "purchase_request_ids"
+        "order_line.purchase_request_line_id.purchase_request_id",
+        "purchase_document_type",
     )
+
     def _compute_document_counts(self):
 
         for order in self:
 
+            requests = (
+                order.order_line
+                .mapped("purchase_request_line_id")
+                .mapped("purchase_request_id")
+            )
+
             documents = self.env["purchase.order"].search(
                 [
                     (
-                        "purchase_request_ids",
+                        "order_line.purchase_request_line_id.purchase_request_id",
                         "in",
-                        order.purchase_request_ids.ids,
+                        requests.ids,
                     )
                 ]
             )
-
 
             order.rfq_count = len(
                 documents.filtered(
@@ -213,7 +222,7 @@ class PurchaseOrder(models.Model):
         rfqs = self.env["purchase.order"].search(
             [
                 (
-                    "purchase_request_ids",
+                    "order_line.purchase_request_line_id.purchase_request_id",
                     "in",
                     self.purchase_request_ids.ids,
                 ),
@@ -260,7 +269,7 @@ class PurchaseOrder(models.Model):
         orders = self.env["purchase.order"].search(
             [
                 (
-                    "purchase_request_ids",
+                    "order_line.purchase_request_line_id.purchase_request_id",
                     "in",
                     self.purchase_request_ids.ids,
                 ),
@@ -553,9 +562,6 @@ class PurchaseOrder(models.Model):
                 "approval_state": "draft",
 
                 "company_id": rfq.company_id.id,
-
-                "purchase_request_ids":
-                    [(6, 0, rfq.purchase_request_ids.ids)],
 
                 "order_line": [
                     (
