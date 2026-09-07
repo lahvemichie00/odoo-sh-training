@@ -9,6 +9,12 @@ class PurchaseOrder(models.Model):
         "approval.matrix.mixin",
     ]
 
+    partner_id = fields.Many2one(
+        "res.partner",
+        string="Vendor",
+        required=False,
+    )
+
     # ==========================================================
     # APPROVAL STAGE
     # ==========================================================
@@ -136,20 +142,18 @@ class PurchaseOrder(models.Model):
         if (
             not context.get("from_purchase_request")
             and not context.get("install_demo")
-            and not self.env.context.get("module_uninstall")
+            and not context.get("module_uninstall")
         ):
 
             raise UserError(
                 _("Purchase Order / RFQ must be created from Purchase Request.")
             )
 
-
         # ======================================================
         # APPLY APPROVAL VALUES FROM CONTEXT
         # ======================================================
 
         for vals in vals_list:
-
 
             # --------------------------------------------------
             # Approval Stage
@@ -165,7 +169,6 @@ class PurchaseOrder(models.Model):
                     )
                 )
 
-
             # --------------------------------------------------
             # Approval State
             # --------------------------------------------------
@@ -179,7 +182,6 @@ class PurchaseOrder(models.Model):
                         "default_approval_state"
                     )
                 )
-
 
         return super().create(vals_list)
 
@@ -247,14 +249,28 @@ class PurchaseOrder(models.Model):
             return super(PurchaseOrder, self).button_confirm()
 
         for order in self:
-            if order.approval_state != "approved":
+
+            if not order.partner_id:
+
                 raise UserError(
-                  _("Purchase document must be approved before confirmation.")
-               )
+                    _(
+                        "Please select Vendor before confirming Purchase Order."
+                    )
+                )
 
-        return super(PurchaseOrder, self).button_confirm()
+            if order.approval_state != "approved":
+
+                raise UserError(
+                    _(
+                        "Purchase document must be approved before confirmation."
+                    )
+                )
+
+        return super(
+            PurchaseOrder,
+            self
+        ).button_confirm()
     
-
     # ==========================================================
     # APPROVAL COMPLETED
     # ==========================================================
