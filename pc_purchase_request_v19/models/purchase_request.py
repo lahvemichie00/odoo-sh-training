@@ -1032,9 +1032,10 @@ class PurchaseRequest(models.Model):
             )
 
 
-        return self._create_purchase_document(
-            selected_lines,
-            confirm=False,
+        return self.with_context(
+            purchase_document_type="rfq"
+        )._create_purchase_document(
+            selected_lines
         )
 
 
@@ -1074,12 +1075,11 @@ class PurchaseRequest(models.Model):
             )
 
 
-        return self._create_purchase_document(
-            selected_lines,
-            confirm=True,
+        return self.with_context(
+            purchase_document_type="po"
+        )._create_purchase_document(
+            selected_lines
         )
-
-
 
     # ======================================================
     # CREATE PURCHASE DOCUMENT
@@ -1088,16 +1088,21 @@ class PurchaseRequest(models.Model):
     def _create_purchase_document(
         self,
         selected_lines,
-        confirm=False,
     ):
 
         self.ensure_one()
 
+        document_type = self.env.context.get(
+            "purchase_document_type",
+            "rfq"
+        )
 
+        is_po = document_type == "po"
+
+
+        # Validate PR lines
         for line in selected_lines:
-
             line._validate_for_order()
-
 
 
         order_lines = []
@@ -1105,93 +1110,72 @@ class PurchaseRequest(models.Model):
 
         for line in selected_lines:
 
-
             order_lines.append(
                 (
                     0,
                     0,
                     {
-                        "product_id":
-                        line.product_id.id,
+                        "product_id": line.product_id.id,
 
-                        "name":
-                        line.desc
-                        or line.product_id.display_name,
+                        "name": (
+                            line.desc
+                            or line.product_id.display_name
+                        ),
 
-                        "product_qty":
-                        line.qty,
+                        "product_qty": line.qty,
 
-                        "product_uom_id":
-                        line.product_uom_id.id,
+                        "product_uom": (
+                            line.product_uom_id.id
+                        ),
 
-                        "date_planned":
-                        fields.Datetime.now(),
+                        "date_planned": (
+                            fields.Datetime.now()
+                        ),
 
-                        "purchase_request_line_id":
-                        line.id,
+                        "purchase_request_line_id": line.id,
                     }
                 )
             )
 
 
+        # CREATE REAL RFQ / PO
+        order = self.env["purchase.order"].with_context(
+            from_purchase_request=True,
+            skip_purchase_approval_workflow=True,
+        ).create(
+            {
+                "origin": self.name,
+
+                "company_id": self.company_id.id,
+
+                "approval_stage": (
+                    "po"
+                    if is_po
+                    else "rfq"
+                ),
+
+                "order_line": order_lines,
+            }
+        )
+
 
         return {
-            "type":
-            "ir.actions.act_window",
+            "type": "ir.actions.act_window",
 
-            "name":
-            _("Purchase Order")
-            if confirm
-            else _("Request For Quotation"),
+            "name": (
+                _("Purchase Order")
+                if is_po
+                else _("Request for Quotation")
+            ),
 
+            "res_model": "purchase.order",
 
-            "res_model":
-            "purchase.order",
+            "res_id": order.id,
 
+            "view_mode": "form",
 
-            "view_mode":
-            "form",
-
-
-            "target":
-            "current",
-
-
-            "context":
-            {
-
-                "default_origin":
-                self.name,
-
-
-                "default_company_id":
-                self.company_id.id,
-
-
-                "default_order_line":
-                order_lines,
-
-
-                "from_purchase_request":
-                True,
-
-
-                "default_approval_stage":
-                "po"
-                if confirm
-                else "rfq",
-
-
-                "pr_confirm_order":
-                confirm,
-
-                "default_confirm_order":
-                confirm,
-
-            }
+            "target": "current",
         }
-
-
 
 # ==========================================================
 # PURCHASE REQUEST LINE
@@ -1535,12 +1519,9 @@ class PurchaseRequestLine(models.Model):
 
         return True
 
-
-
     # ======================================================
     # LOCK COMPLETED LINE
     # ======================================================
-
 
     def write(self, vals):
 

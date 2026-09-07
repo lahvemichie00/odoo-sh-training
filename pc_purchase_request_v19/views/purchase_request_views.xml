@@ -729,7 +729,9 @@
         <field name="state">code</field>
 
         <field name="code">
-            action = records.with_context(pr_confirm_order=False).action_open_create_order_wizard()
+            action = records.with_context(
+                purchase_document_type='rfq'
+            ).action_open_create_order_wizard()
         </field>
 
     </record>
@@ -755,8 +757,10 @@
         <field name="state">code</field>
 
         <field name="code">
-            action = records.with_context(pr_confirm_order=True).action_open_create_order_wizard()
-        </field>
+            action = records.with_context(
+                purchase_document_type='po'
+            ).action_open_create_order_wizard()
+</field>
 
     </record>
 

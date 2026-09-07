@@ -25,7 +25,6 @@ class PurchaseOrder(models.Model):
         tracking=True,
     )
 
-
     # ==========================================================
     # APPROVAL STATUS
     # ==========================================================
@@ -61,7 +60,6 @@ class PurchaseOrder(models.Model):
     )
 
 
-
     @api.depends(
         "order_line.purchase_request_line_id"
     )
@@ -77,7 +75,6 @@ class PurchaseOrder(models.Model):
 
             order.purchase_request_ids = requests
             order.purchase_request_count = len(requests)
-
 
 
     # ==========================================================
@@ -246,16 +243,16 @@ class PurchaseOrder(models.Model):
 
     def button_confirm(self):
 
-        if self.env.context.get('install_demo'):
-            return super().button_confirm()
+        if self.env.context.get("install_demo"):
+            return super(PurchaseOrder, self).button_confirm()
 
         for order in self:
-            if order.approval_state != 'approved':
+            if order.approval_state != "approved":
                 raise UserError(
-                    _("Purchase document must be approved before confirmation.")
-                )
+                  _("Purchase document must be approved before confirmation.")
+               )
 
-        return super().button_confirm()
+        return super(PurchaseOrder, self).button_confirm()
     
 
     # ==========================================================
@@ -301,8 +298,7 @@ class PurchaseOrder(models.Model):
         user,
         reason,
     ):
-
-
+      
         for order in self:
 
 
@@ -312,7 +308,6 @@ class PurchaseOrder(models.Model):
                         "rejected"
                 }
             )
-
 
             order.message_post(
                 body=_(
@@ -324,6 +319,5 @@ class PurchaseOrder(models.Model):
                     reason,
                 )
             )
-
 
         return True

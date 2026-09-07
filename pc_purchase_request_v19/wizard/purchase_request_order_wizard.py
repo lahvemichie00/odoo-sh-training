@@ -141,12 +141,18 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
         # DETERMINE DOCUMENT TYPE
         # ==========================================================
 
-        create_po = bool(
-            self.env.context.get("pr_confirm_order")
-            or self.env.context.get("default_confirm_order")
+        document_type = self.env.context.get(
+            "purchase_document_type",
+            "rfq"
         )
 
-        approval_stage = "po" if create_po else "rfq"
+        create_po = document_type == "po"
+
+        approval_stage = (
+            "po"
+            if create_po
+            else "rfq"
+        )
 
         # ==========================================================
         # CREATE / REUSE PURCHASE DOCUMENT
