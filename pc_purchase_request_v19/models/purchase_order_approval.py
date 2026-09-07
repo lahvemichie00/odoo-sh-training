@@ -82,6 +82,28 @@ class PurchaseOrder(models.Model):
         compute="_compute_purchase_request_ids",
     )
 
+    source_rfq_id = fields.Many2one(
+        "purchase.order",
+        string="Source RFQ",
+        readonly=True,
+        copy=False,
+    )
+
+    rfq_count = fields.Integer(
+        string="RFQ",
+        compute="_compute_document_counts",
+    )
+
+
+    po_count = fields.Integer(
+        string="Purchase Orders",
+        compute="_compute_document_counts",
+    )
+
+
+    # ==========================================================
+    # COMPUTE PURCHASE REQUEST LINK
+    # ==========================================================
 
     @api.depends(
         "order_line.purchase_request_line_id"
@@ -97,7 +119,45 @@ class PurchaseOrder(models.Model):
             )
 
             order.purchase_request_ids = requests
+
             order.purchase_request_count = len(requests)
+
+    # ==========================================================
+    # COMPUTE RFQ / PO SMART BUTTON COUNT
+    # ==========================================================
+
+    @api.depends(
+        "purchase_request_ids"
+    )
+    def _compute_document_counts(self):
+
+        for order in self:
+
+            documents = self.env["purchase.order"].search(
+                [
+                    (
+                        "purchase_request_ids",
+                        "in",
+                        order.purchase_request_ids.ids,
+                    )
+                ]
+            )
+
+
+            order.rfq_count = len(
+                documents.filtered(
+                    lambda x:
+                    x.purchase_document_type == "rfq"
+                )
+            )
+
+
+            order.po_count = len(
+                documents.filtered(
+                    lambda x:
+                    x.purchase_document_type == "po"
+                )
+            )
 
 
     # ==========================================================
@@ -139,6 +199,123 @@ class PurchaseOrder(models.Model):
             "domain": [
                 ("id", "in", requests.ids),
             ],
+            "target": "current",
+        }
+
+    # ==========================================================
+    # OPEN RFQ SMART BUTTON
+    # ==========================================================
+
+    def action_open_rfqs(self):
+
+        self.ensure_one()
+
+        rfqs = self.env["purchase.order"].search(
+            [
+                (
+                    "purchase_request_ids",
+                    "in",
+                    self.purchase_request_ids.ids,
+                ),
+                (
+                    "purchase_document_type",
+                    "=",
+                    "rfq",
+                ),
+            ]
+        )
+
+
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("RFQ"),
+
+            "res_model": "purchase.order",
+
+            "view_mode": "list,form",
+
+            "domain": [
+                (
+                    "id",
+                    "in",
+                    rfqs.ids,
+                )
+            ],
+
+            "target": "current",
+        }
+
+
+
+    # ==========================================================
+    # OPEN PURCHASE ORDER SMART BUTTON
+    # ==========================================================
+
+    def action_open_purchase_orders(self):
+
+        self.ensure_one()
+
+
+        orders = self.env["purchase.order"].search(
+            [
+                (
+                    "purchase_request_ids",
+                    "in",
+                    self.purchase_request_ids.ids,
+                ),
+                (
+                    "purchase_document_type",
+                    "=",
+                    "po",
+                ),
+            ]
+        )
+
+
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("Purchase Orders"),
+
+            "res_model": "purchase.order",
+
+            "view_mode": "list,form",
+
+            "domain": [
+                (
+                    "id",
+                    "in",
+                    orders.ids,
+                )
+            ],
+
+            "target": "current",
+        }
+
+    # ==========================================================
+    # OPEN SOURCE RFQ
+    # ==========================================================
+
+    def action_open_source_rfq(self):
+
+        self.ensure_one()
+
+        if not self.source_rfq_id:
+            return False
+
+
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("Source RFQ"),
+
+            "res_model": "purchase.order",
+
+            "view_mode": "form",
+
+            "res_id": self.source_rfq_id.id,
+
             "target": "current",
         }
 
@@ -366,6 +543,8 @@ class PurchaseOrder(models.Model):
                 "partner_id": rfq.partner_id.id,
 
                 "origin": rfq.name,
+
+                "source_rfq_id": rfq.id,
 
                 "purchase_document_type": "po",
 

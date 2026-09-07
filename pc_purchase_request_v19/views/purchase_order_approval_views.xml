@@ -36,42 +36,47 @@
 
                 </button>
 
+                <!-- RFQ SMART BUTTON -->
 
-
-                <!-- ================================================= -->
-                <!-- SOURCE RFQ SMART BUTTON -->
-                <!-- ================================================= -->
-                
-                <!--
-                <button name="action_open_source_rfq"
+                <button name="action_open_rfqs"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-list-alt"
-                        invisible="source_rfq_id == False">
+                        icon="fa-file-text-o"
+                        invisible="rfq_count == 0">
 
-                    <field name="source_rfq_id"
+                    <field name="rfq_count"
                            widget="statinfo"
-                           string="Source RFQ"/>
+                           string="RFQ"/>
 
                 </button>
-                -->
 
-                <!-- ================================================= -->
-                <!-- CONVERTED PO SMART BUTTON -->
-                <!-- ================================================= -->
-                <!--
-                <button name="action_open_converted_purchase_orders"
+                <!-- PURCHASE ORDER SMART BUTTON -->
+
+                <button name="action_open_purchase_orders"
                         type="object"
                         class="oe_stat_button"
                         icon="fa-shopping-cart"
-                        invisible="converted_po_count == 0">
+                        invisible="po_count == 0">
 
-                    <field name="converted_po_count"
+                    <field name="po_count"
                            widget="statinfo"
                            string="Purchase Orders"/>
+                </button>
 
-                </button> 
-                -->
+                <!-- SOURCE RFQ SMART BUTTON -->
+
+                <button name="action_open_source_rfq"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-file-text-o"
+                        invisible="source_rfq_id == False">
+
+                <field name="source_rfq_id"
+                       widget="statinfo"
+                       string="Source RFQ"/>
+
+                </button>
+
             </xpath>
 
             <!-- ===================================================== -->
@@ -99,16 +104,6 @@
                         invisible="approval_state != 'waiting_approval'
                                    or not approval_can_current_user"/>
 
-                <!--
-                <button name="action_convert_to_po"
-                        type="object"
-                        string="CONVERT TO PO"
-                        class="oe_highlight"
-                        invisible="approval_stage != 'rfq'
-                                   or approval_state != 'approved'
-                                   or converted_po_count > 0"/>
-                -->
-
             </xpath>
 
             <!-- ===================================================== -->
@@ -121,8 +116,12 @@
 
                 <group string="Approval">
 
-
                     <group>
+
+                        <field name="purchase_document_type"
+                               string="Document Type"
+                               widget="badge"
+                               readonly="1"/>
 
                         <field name="approval_stage"
                                string="Approval Stage"
@@ -130,24 +129,17 @@
 
                     </group>
 
-
                     <group>
 
                         <field name="approval_state"
                                string="Approval Status"
+                               widget="badge"
                                readonly="1"/>
-
                     </group>
-
 
                 </group>
 
-
             </xpath>
-
-
-
-
 
             <!-- ===================================================== -->
             <!-- TECHNICAL FIELDS                                      -->
@@ -176,20 +168,14 @@
                        invisible="1"/>
 
 
-                <!--
+                <field name="rfq_count"
+                       invisible="1"/>
+
+                <field name="po_count"
+                       invisible="1"/>
+
                 <field name="source_rfq_id"
                        invisible="1"/>
-
-
-
-                <field name="converted_po_ids"
-                       invisible="1"/>
-
-
-
-                <field name="converted_po_count"
-                       invisible="1"/>
-                -->
 
             </xpath>
 
