@@ -387,7 +387,7 @@ class PurchaseRequest(models.Model):
             request.rfq_count = len(
                 orders.filtered(
                     lambda order:
-                    order.approval_stage == "rfq"
+                    order.purchase_document_type == "rfq"
                 )
             )
 
@@ -395,7 +395,7 @@ class PurchaseRequest(models.Model):
             request.po_count = len(
                 orders.filtered(
                     lambda order:
-                    order.approval_stage == "po"
+                    order.purchase_document_type == "po"
                 )
             )
 
@@ -480,7 +480,7 @@ class PurchaseRequest(models.Model):
                     self.line_ids.ids,
                 ),
                 (
-                    "approval_stage",
+                    "purchase_document_type",
                     "=",
                     "rfq",
                 ),
@@ -521,7 +521,7 @@ class PurchaseRequest(models.Model):
                     self.line_ids.ids,
                 ),
                 (
-                    "approval_stage",
+                    "purchase_document_type",
                     "=",
                     "po",
                 ),
@@ -1148,6 +1148,14 @@ class PurchaseRequest(models.Model):
 
                 "company_id": self.company_id.id,
 
+                # Document history type
+                "purchase_document_type": (
+                    "po"
+                    if is_po
+                    else "rfq"
+                ),
+
+                # Current approval stage
                 "approval_stage": (
                     "po"
                     if is_po
@@ -1157,7 +1165,6 @@ class PurchaseRequest(models.Model):
                 "order_line": order_lines,
             }
         )
-
 
         return {
             "type": "ir.actions.act_window",

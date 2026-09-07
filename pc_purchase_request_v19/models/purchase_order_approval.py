@@ -9,10 +9,20 @@ class PurchaseOrder(models.Model):
         "approval.matrix.mixin",
     ]
 
-    partner_id = fields.Many2one(
-        "res.partner",
-        string="Vendor",
-        required=False,
+    # ==========================================================
+    # PURCHASE DOCUMENT TYPE
+    # ==========================================================
+
+    purchase_document_type = fields.Selection(
+        [
+            ("rfq", "RFQ"),
+            ("po", "Purchase Order"),
+        ],
+        string="Purchase Document Type",
+        default="rfq",
+        required=True,
+        copy=False,
+        tracking=True,
     )
 
     # ==========================================================
@@ -183,6 +193,43 @@ class PurchaseOrder(models.Model):
                     )
                 )
 
+        # ======================================================
+        # GENERATE RFQ / PO REFERENCE
+        # ======================================================
+
+        for vals in vals_list:
+
+            document_type = vals.get(
+                "purchase_document_type",
+                "rfq"
+            )
+
+            if vals.get("name") in (
+                False,
+                "/",
+                "New",
+            ):
+
+                if document_type == "rfq":
+
+                    vals["name"] = (
+                        self.env["ir.sequence"]
+                        .next_by_code(
+                            "purchase.order.rfq"
+                        )
+                        or _("New")
+                    )
+
+                elif document_type == "po":
+
+                    vals["name"] = (
+                        self.env["ir.sequence"]
+                        .next_by_code(
+                            "purchase.order.custom"
+                        )
+                        or _("New")
+                    )
+
         return super().create(vals_list)
 
     # ==========================================================
@@ -246,19 +293,56 @@ class PurchaseOrder(models.Model):
     def button_confirm(self):
 
         if self.env.context.get("install_demo"):
-            return super(PurchaseOrder, self).button_confirm()
+            return super(
+                PurchaseOrder,
+                self
+            ).button_confirm()
 
-        for order in self:
+        # ==================================================
+        # NORMAL PURCHASE ORDER CONFIRM
+        # ==================================================
 
-            if not order.partner_id:
+        if all(
+            order.purchase_document_type == "po"
+            for order in self
+        ):
+
+            for order in self:
+
+                if not order.partner_id:
+
+                    raise UserError(
+                        _("Please select Vendor.")
+                    )
+
+                if order.approval_state != "approved":
+
+                    raise UserError(
+                        _(
+                            "Purchase document must be approved before confirmation."
+                        )
+                    )
+
+            return super(
+                PurchaseOrder,
+                self
+            ).button_confirm()
+
+        # ==================================================
+        # RFQ -> CREATE PO
+        # ==================================================
+
+        for rfq in self:
+
+            if not rfq.partner_id:
 
                 raise UserError(
                     _(
-                        "Please select Vendor before confirming Purchase Order."
+                        "Please select Vendor before confirming RFQ."
                     )
                 )
 
-            if order.approval_state != "approved":
+            if rfq.approval_state != "approved":
 
                 raise UserError(
                     _(
@@ -266,10 +350,72 @@ class PurchaseOrder(models.Model):
                     )
                 )
 
-        return super(
-            PurchaseOrder,
-            self
-        ).button_confirm()
+
+            po = self.env["purchase.order"].with_context(
+                from_purchase_request=True,
+                skip_purchase_approval_workflow=True,
+            ).create({
+
+                "partner_id": rfq.partner_id.id,
+
+                "origin": rfq.name,
+
+                "purchase_document_type": "po",
+
+                "approval_stage": "po",
+
+                "approval_state": "draft",
+
+                "company_id": rfq.company_id.id,
+
+                "purchase_request_ids":
+                    [(6, 0, rfq.purchase_request_ids.ids)],
+
+                "order_line": [
+                    (
+                        0,
+                        0,
+                        {
+                            "product_id": line.product_id.id,
+
+                            "name": line.name,
+
+                            "product_qty": line.product_qty,
+
+                            "product_uom_id": line.product_uom_id.id,
+
+                            "date_planned": line.date_planned,
+
+                            "purchase_request_line_id":
+                                line.purchase_request_line_id.id,
+                        }
+                    )
+
+                    for line in rfq.order_line
+                ],
+            })
+
+            rfq.message_post(
+                body=_(
+                    "Purchase Order created: %s"
+                )
+                % po.name
+            )
+
+
+            return {
+                "type": "ir.actions.act_window",
+
+                "name": _("Purchase Order"),
+
+                "res_model": "purchase.order",
+
+                "res_id": po.id,
+
+                "view_mode": "form",
+
+                "target": "current",
+            }
     
     # ==========================================================
     # APPROVAL COMPLETED
@@ -302,8 +448,6 @@ class PurchaseOrder(models.Model):
 
 
         return True
-
-
 
     # ==========================================================
     # APPROVAL REJECTED

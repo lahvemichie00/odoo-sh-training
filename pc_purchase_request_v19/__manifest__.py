@@ -19,6 +19,7 @@
         "security/ir.model.access.csv",
 
         "data/purchase_request_sequence.xml",
+        "data/purchase_order_sequence.xml",
 
         "views/purchase_request_views.xml",
         "views/purchase_order_approval_views.xml",

@@ -719,21 +719,20 @@
         <field name="name">Create RFQ</field>
 
         <field name="model_id"
-               ref="model_purchase_request_line"/>
+               ref="model_purchase_request"/>
 
         <field name="binding_model_id"
-               ref="model_purchase_request_line"/>
+               ref="model_purchase_request"/>
 
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">
+            list
+        </field>
 
         <field name="state">code</field>
 
         <field name="code">
-            action = records.with_context(
-                purchase_document_type='rfq'
-            ).action_open_create_order_wizard()
+            action = records.action_create_rfq()
         </field>
-
     </record>
 
 
@@ -747,21 +746,20 @@
         <field name="name">Create PO</field>
 
         <field name="model_id"
-               ref="model_purchase_request_line"/>
+               ref="model_purchase_request"/>
 
         <field name="binding_model_id"
-               ref="model_purchase_request_line"/>
+               ref="model_purchase_request"/>
 
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">
+            list
+        </field>
 
         <field name="state">code</field>
 
         <field name="code">
-            action = records.with_context(
-                purchase_document_type='po'
-            ).action_open_create_order_wizard()
-</field>
-
+            action = records.action_create_po()
+        </field>
     </record>
 
 
