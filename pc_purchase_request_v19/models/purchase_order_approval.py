@@ -9,6 +9,13 @@ class PurchaseOrder(models.Model):
         "approval.matrix.mixin",
     ]
 
+    partner_id = fields.Many2one(
+        "res.partner",
+        string="Vendor",
+        required=False,
+        tracking=True,
+    )
+
     # ==========================================================
     # PURCHASE DOCUMENT TYPE
     # ==========================================================
