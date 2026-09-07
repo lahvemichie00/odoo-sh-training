@@ -1124,7 +1124,7 @@ class PurchaseRequest(models.Model):
 
                         "product_qty": line.qty,
 
-                        "product_uom": (
+                        "product_uom_id": (
                             line.product_uom_id.id
                         ),
 
