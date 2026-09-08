@@ -33,13 +33,27 @@
 
                 </button>
 
+                <!-- PURCHASE ORDER -->
+
+                <button name="action_open_purchase_orders"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-shopping-cart"
+                        invisible="po_count == 0">
+
+                    <field name="po_count"
+                           widget="statinfo"
+                           string="Purchase Orders"/>
+
+                </button>
+
                 <!-- SOURCE RFQ -->
 
                 <button name="action_open_source_rfq"
                         type="object"
                         class="oe_stat_button"
                         icon="fa-file-text-o"
-                        invisible="not source_rfq_id">
+                        invisible="not source_rfq_id or purchase_document_type != 'po'">
 
                     <div class="o_stat_info">
 
@@ -58,7 +72,8 @@
                         type="object"
                         class="oe_stat_button"
                         icon="fa-truck"
-                        invisible="receipt_count == 0">
+                        invisible="receipt_count == 0
+                                  or purchase_document_type != 'po'">
 
 
                    <field name="receipt_count"
@@ -74,7 +89,8 @@
                         type="object"
                         class="oe_stat_button"
                         icon="fa-pencil-square-o"
-                        invisible="invoice_count == 0">
+                        invisible="invoice_count == 0
+                                  or purchase_document_type != 'po'">
 
                     <field name="invoice_count"
                            widget="statinfo"
@@ -100,7 +116,8 @@
 
             <!-- Hide Default Purchase Buttons -->
 
-            <xpath expr="//button[@name='action_rfq_send']" position="attributes">
+            <xpath expr="//button[@name='action_rfq_send']" position="attributes"
+                   optional="show">
 
                 <attribute name="invisible">1</attribute>
 
@@ -113,35 +130,18 @@
             </xpath>
 
 
-
-            <xpath expr="//button[@name='button_cancel']" position="attributes">
-
-                <attribute name="invisible">1</attribute>
-
-            </xpath>
-
-            <!-- HIDE NORMAL CONFIRM -->
-
-            <xpath expr="//button[@name='button_confirm']" position="attributes">
+            <xpath expr="//button[@name='button_cancel']" position="attributes"
+                   optional="show">
 
                 <attribute name="invisible">1</attribute>
 
             </xpath>
 
-
-            <!-- HIDE CREATE BILL UNTIL APPROVED -->
-
-            <xpath expr="//button[@name='action_create_invoice']" position="attributes">
-
-                <attribute name="invisible">
-                    approval_state != 'approved'
-                </attribute>
-
-            </xpath>
 
             <!-- HIDE LOCK -->
 
-            <xpath expr="//button[@name='button_lock']" position="attributes">
+            <xpath expr="//button[@name='button_lock']" position="attributes"
+                   optional="show">
 
                 <attribute name="invisible">
                     approval_state != 'approved'
@@ -175,11 +175,22 @@
                                   or not approval_can_current_user"/>
 
 
+                <!-- CONFIRM RFQ -->
+
+               <button name="button_confirm"
+                       type="object"
+                       string="CONFIRM RFQ"
+                       class="oe_highlight"
+                       invisible="approval_state != 'approved'
+                                 or purchase_document_type != 'rfq'"/>
+
+
                 <button name="action_add_foc_line"
                         type="object"
                         string="ADD FOC"
                         class="oe_highlight"
-                        invisible="approval_state != 'approved'"/>
+                        invisible="approval_state != 'approved'
+                                  or purchase_document_type != 'po'"/>
 
 
             </xpath>
