@@ -72,13 +72,15 @@
                         type="object"
                         class="oe_stat_button"
                         icon="fa-truck"
-                        invisible="receipt_count == 0
-                                  or purchase_document_type != 'po'">
+                        invisible="purchase_document_type != 'po'">
 
+                    <div class="o_stat_info">
 
-                   <field name="receipt_count"
-                          widget="statinfo"
-                          string="Receipts"/>
+                        <span class="o_stat_text">
+                            Receipts
+                        </span>
+
+                    </div>
 
                 </button>
 
