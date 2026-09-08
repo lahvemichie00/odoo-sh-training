@@ -16,14 +16,17 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
     purchase_order_id = fields.Many2one(
         "purchase.order",
         string="Purchase Order",
-        domain="[('partner_id', '=', supplier_id), ('company_id', '=', company_id), ('state', '=', 'draft')]",
+        domain="[('partner_id', '=', supplier_id), "
+               "('company_id', '=', company_id), "
+               "('state', '=', 'draft')]",
     )
 
     picking_type_id = fields.Many2one(
         "stock.picking.type",
         string="Picking Type",
         required=True,
-        domain="[('code', '=', 'incoming'), ('company_id', 'in', [company_id, False])]",
+        domain="[('code', '=', 'incoming'), "
+               "('company_id', 'in', [company_id, False])]",
     )
 
     group_category_id = fields.Many2one(
@@ -55,7 +58,9 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
 
         active_ids = self.env.context.get("active_ids", [])
 
-        lines = self.env["purchase.request.line"].browse(active_ids).exists()
+        lines = self.env["purchase.request.line"].browse(
+            active_ids
+        ).exists()
 
         if not lines:
             return values
@@ -92,10 +97,17 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                         {
                             "line_id": line.id,
                             "product_id": line.product_id.id,
-                            "name": line.desc
-                            or line.product_id.display_name,
-                            "product_qty": line.qty - line.qty_released,
-                            "product_uom_id": line.product_uom_id.id,
+                            "name": (
+                                line.desc
+                                or line.product_id.display_name
+                            ),
+
+                            "product_qty": line.qty,
+
+                            "product_uom_id": (
+                                line.product_uom_id.id
+                            ),
+
                             "price_unit": 0.0,
                         },
                     )
@@ -119,21 +131,66 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
             )
 
         if self.item_ids.filtered(
-            lambda x: x.product_qty <= 0
+            lambda item: item.product_qty <= 0
         ):
             raise UserError(
                 _("Purchase quantity must be positive.")
             )
 
+        # ==========================================================
+        # DETERMINE DOCUMENT TYPE
+        # ==========================================================
+
+        document_type = self.env.context.get(
+            "purchase_document_type",
+            "rfq"
+        )
+
+        create_po = document_type == "po"
+
+        approval_stage = (
+            "po"
+            if create_po
+            else "rfq"
+        )
+
+        # ==========================================================
+        # CREATE / REUSE PURCHASE DOCUMENT
+        # ==========================================================
+
         order = self.purchase_order_id
 
-        if not order:
-            order = self.env["purchase.order"].create(
+        if order:
+            if order.state != "draft":
+                raise UserError(
+                    _("Only draft purchase orders can be reused.")
+                )
+
+            order.with_context(
+                skip_purchase_approval_workflow=True
+            ).write(
+                {
+                    "approval_stage": approval_stage,
+                    "approval_state": "draft",
+                }
+            )
+
+        else:
+            # Purchase Order / RFQ is being created
+            # through an approved Purchase Request.
+            #
+            # This context is required because the
+            # purchase.order.create() method blocks
+            # direct creation by normal purchase users.
+
+            order = self.env["purchase.order"].with_context(
+                from_purchase_request=True
+            ).create(
                 {
                     "company_id": self.company_id.id,
                     "currency_id": self.currency_id.id,
                     "picking_type_id": self.picking_type_id.id,
-                    "approval_stage": "rfq",
+                    "approval_stage": approval_stage,
                     "approval_state": "draft",
                     "origin": ", ".join(
                         self.item_ids.mapped(
@@ -143,19 +200,26 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                 }
             )
 
+        # ==========================================================
+        # SUPPLIER
+        # ==========================================================
+
+        if self.supplier_id:
+            order.with_context(
+                skip_purchase_approval_workflow=True
+            ).write(
+                {
+                    "partner_id": self.supplier_id.id,
+                }
+            )
+
+        # ==========================================================
+        # PURCHASE ORDER LINES
+        # ==========================================================
+
         for item in self.item_ids:
 
             request_line = item.line_id
-
-            if item.product_qty > (
-                request_line.qty - request_line.qty_released
-            ):
-                raise UserError(
-                    _(
-                        "Quantity exceeds requested quantity for %s"
-                    )
-                    % request_line.product_id.display_name
-                )
 
             po_line = self.env["purchase.order.line"].create(
                 {
@@ -174,14 +238,21 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                 (4, po_line.id)
             ]
 
-        # Do not automatically confirm the RFQ.
-        # The RFQ must go through the RFQ approval workflow first.
+        # ==========================================================
+        # DO NOT CONFIRM AUTOMATICALLY
+        # ==========================================================
 
         return {
             "type": "ir.actions.act_window",
+            "name": (
+                _("Purchase Order")
+                if create_po
+                else _("Request for Quotation")
+            ),
             "res_model": "purchase.order",
             "res_id": order.id,
             "view_mode": "form",
+            "target": "current",
         }
 
 

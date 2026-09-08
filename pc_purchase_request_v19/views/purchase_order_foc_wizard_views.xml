@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+
+
+    <record id="view_purchase_order_foc_wizard_form"
+            model="ir.ui.view">
+
+
+        <field name="name">purchase.order.foc.wizard.form</field>
+
+
+        <field name="model">purchase.order.foc.wizard</field>
+
+
+        <field name="arch"
+               type="xml">
+
+
+            <form string="Add FOC Product">
+
+
+                <group>
+
+
+                    <field name="purchase_order_id"
+                           invisible="1"/>
+
+
+                    <field name="product_id"/>
+
+
+                    <field name="quantity"/>
+
+
+                </group>
+
+
+                <footer>
+
+
+                    <button name="action_add_foc"
+                            type="object"
+                            string="Add FOC"
+                            class="btn-primary"/>
+
+
+                    <button string="Cancel"
+                            special="cancel"
+                            class="btn-secondary"/>
+
+
+                </footer>
+
+
+            </form>
+
+
+        </field>
+
+
+    </record>
+
+
+</odoo>
