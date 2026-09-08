@@ -702,31 +702,6 @@ class PurchaseOrder(models.Model):
         return True
 
 
-    # ==========================================================
-    # ADD FOC LINE
-    # ==========================================================
-
-    def action_add_foc_line(self):
-
-        self.ensure_one()
-
-
-        return {
-            "type": "ir.actions.act_window",
-
-            "name": _("Add FOC Product"),
-
-            "res_model": "purchase.order.foc.wizard",
-
-            "view_mode": "form",
-
-            "target": "new",
-
-            "context": {
-                "default_purchase_order_id": self.id,
-            },
-        }
-
 class PurchaseOrderLine(models.Model):
 
     _inherit = "purchase.order.line"
