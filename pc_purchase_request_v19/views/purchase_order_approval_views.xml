@@ -72,17 +72,27 @@
                         type="object"
                         class="oe_stat_button"
                         icon="fa-truck"
-                        invisible="purchase_document_type != 'po'">
+                        invisible="purchase_document_type != 'po'
+                                  or incoming_picking_count == 0">
 
-                    <div class="o_stat_info">
+                    <field name="incoming_picking_count"
+                           widget="statinfo"
+                           string="Receipts"/>
+                </button>
 
-                        <span class="o_stat_text">
-                            Receipts
-                        </span>
+                <button name="action_view_invoice"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-file-text-o"
+                        invisible="purchase_document_type != 'po'
+                                  or invoice_count == 0">
 
-                    </div>
+                    <field name="invoice_count"
+                           widget="statinfo"
+                           string="Bills"/>
 
                 </button>
+
 
             </xpath>
 
@@ -96,7 +106,7 @@
 
                 <field name="approval_state"
                        widget="statusbar"
-                       statusbar_visible="draft,waiting_approval,approved"/>
+                       statusbar_visible="draft,waiting_approval,approved,rejected"/>
 
             </xpath>
 
@@ -111,7 +121,14 @@
 
             <xpath expr="//button[@name='button_confirm']" position="attributes">
 
-                <attribute name="invisible">1</attribute>
+                <attribute name="invisible">
+                   purchase_document_type != 'po'
+                   or approval_state != 'approved'
+                </attribute>
+
+                <attribute name="string">
+                    CONFIRM ORDER
+                </attribute>
 
             </xpath>
 
@@ -131,6 +148,7 @@
 
                 <attribute name="invisible">
                     approval_state != 'approved'
+                    or state != 'purchase'
                 </attribute>
 
             </xpath>
@@ -163,12 +181,12 @@
 
                 <!-- CONFIRM RFQ -->
 
-               <button name="button_confirm"
-                       type="object"
-                       string="CONFIRM RFQ"
-                       class="oe_highlight"
-                       invisible="approval_state != 'approved'
-                                 or purchase_document_type != 'rfq'"/>
+                <button name="action_confirm_rfq"
+                        type="object"
+                        string="CONFIRM RFQ"
+                        class="oe_highlight"
+                        invisible="approval_state != 'approved'
+                                  or purchase_document_type != 'rfq'"/>
 
 
                 <button name="action_add_foc_line"
@@ -177,7 +195,6 @@
                         class="oe_highlight"
                         invisible="approval_state != 'approved'
                                   or purchase_document_type != 'po'"/>
-
 
             </xpath>
 
@@ -243,6 +260,12 @@
                        invisible="1"/>
 
                 <field name="po_count"
+                       invisible="1"/>
+
+                <field name="incoming_picking_count"
+                       invisible="1"/>
+
+                <field name="invoice_count"
                        invisible="1"/>
 
 

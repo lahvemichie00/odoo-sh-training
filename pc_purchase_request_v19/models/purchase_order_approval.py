@@ -94,12 +94,10 @@ class PurchaseOrder(models.Model):
         compute="_compute_document_counts",
     )
 
-
     po_count = fields.Integer(
         string="Purchase Orders",
         compute="_compute_document_counts",
     )
-
 
     # ==========================================================
     # COMPUTE PURCHASE REQUEST LINK
@@ -608,6 +606,16 @@ class PurchaseOrder(models.Model):
             }
 
     # ==========================================================
+    # CONFIRM RFQ BUTTON
+    # ==========================================================
+
+    def action_confirm_rfq(self):
+
+        self.ensure_one()
+
+        return self.button_confirm()
+
+    # ==========================================================
     # OPEN FOC WIZARD
     # ==========================================================
 
@@ -700,6 +708,15 @@ class PurchaseOrder(models.Model):
             )
 
         return True
+
+    def _compute_receipt_count(self):
+        for order in self:
+            order.receipt_count = 0
+
+
+    def _compute_invoice_count(self):
+        for order in self:
+            order.invoice_count = 0
 
 
 class PurchaseOrderLine(models.Model):
