@@ -43,7 +43,7 @@
                 <footer>
 
 
-                    <button name="action_add_foc_line"
+                    <button name="action_add_foc"
                             type="object"
                             string="Add FOC"
                             class="btn-primary"/>
