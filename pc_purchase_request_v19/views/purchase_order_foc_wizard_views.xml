@@ -7,14 +7,10 @@
             model="ir.ui.view">
 
 
-        <field name="name">
-            purchase.order.foc.wizard.form
-        </field>
+        <field name="name">purchase.order.foc.wizard.form</field>
 
 
-        <field name="model">
-            purchase.order.foc.wizard
-        </field>
+        <field name="model">purchase.order.foc.wizard</field>
 
 
         <field name="arch"
