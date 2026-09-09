@@ -43,7 +43,7 @@
 
                     <field name="po_count"
                            widget="statinfo"
-                           string="Purchase Orders"/>
+                           string="Purchase"/>
 
                 </button>
 
@@ -104,7 +104,7 @@
 
                 <field name="approval_state"
                        widget="statusbar"
-                       statusbar_visible="draft,waiting_approval,approved,rejected"/>
+                       statusbar_visible="draft,waiting_approval,approved"/>
 
             </xpath>
 
@@ -152,9 +152,9 @@
 
                 <button name="action_submit_for_approval"
                         type="object"
-                        string="SUBMIT FOR APPROVAL"
+                        string="CONFIRM"
                         class="oe_highlight"
-                        invisible="approval_state != 'draft'"/>
+                        invisible="approval_state != 'draft' or purchase_document_type != 'rfq'"/>
 
                 <button name="action_approve"
                         type="object"
@@ -204,6 +204,9 @@
 
                             <field name="approval_stage"
                                    string="Approval Stage"
+                                   readonly="1"/>
+                            
+                            <field name="group_category_id"
                                    readonly="1"/>
 
                         </group>

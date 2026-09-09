@@ -1148,6 +1148,8 @@ class PurchaseRequest(models.Model):
 
                 "company_id": self.company_id.id,
 
+                "group_category_id": self.group_category_id.id,
+
                 # Document history type
                 "purchase_document_type": (
                     "po"
@@ -1172,10 +1174,6 @@ class PurchaseRequest(models.Model):
                 "order_line": order_lines,
             }
         )
-
-        # CONVERT PO DIRECTLY
-        if is_po:
-            order.button_confirm()
 
         return {
             "type": "ir.actions.act_window",

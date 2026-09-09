@@ -16,6 +16,13 @@ class PurchaseOrder(models.Model):
         tracking=True,
     )
 
+    group_category_id = fields.Many2one(
+        "product.group.category",
+        string="Group Category",
+        readonly=True,
+        tracking=True,
+    )
+
     # ==========================================================
     # PURCHASE DOCUMENT TYPE
     # ==========================================================
@@ -393,8 +400,7 @@ class PurchaseOrder(models.Model):
                 "rfq"
             )
 
-            if vals.get("name") in (
-                False,
+            if not vals.get("name") or vals.get("name") in (
                 "/",
                 "New",
             ):

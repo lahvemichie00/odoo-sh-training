@@ -3,49 +3,30 @@
 <odoo>
 
     <!-- RFQ Sequence -->
-
     <record id="seq_purchase_rfq" model="ir.sequence">
 
-        <field name="name">
-            Request for Quotation
-        </field>
+        <field name="name">Request for Quotation</field>
 
-        <field name="code">
-            purchase.order.rfq
-        </field>
+        <field name="code">purchase.order.rfq</field>
 
-        <field name="prefix">
-            RFQ/%(year)s/
-        </field>
+        <field name="prefix">RFQ</field>
 
-        <field name="padding">
-            5
-        </field>
+        <field name="padding">5</field>
 
     </record>
 
 
     <!-- Purchase Order Sequence -->
-
     <record id="seq_purchase_order_custom" model="ir.sequence">
 
-        <field name="name">
-            Purchase Order
-        </field>
+        <field name="name">Purchase Order</field>
 
-        <field name="code">
-            purchase.order.custom
-        </field>
+        <field name="code">purchase.order.custom</field>
 
-        <field name="prefix">
-            PO/%(year)s/
-        </field>
+        <field name="prefix">PO</field>
 
-        <field name="padding">
-            5
-        </field>
+        <field name="padding">5</field>
 
     </record>
-
 
 </odoo>
