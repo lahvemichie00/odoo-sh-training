@@ -9,7 +9,7 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
     supplier_id = fields.Many2one(
         "res.partner",
         string="Supplier",
-        required=True,
+        required=False,
         domain=[("supplier_rank", ">", 0)],
     )
 
@@ -124,11 +124,6 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
 
     def action_create_order(self):
         self.ensure_one()
-
-        if not self.supplier_id:
-            raise UserError(
-                _("Please select Supplier before creating RFQ/PO.")
-            )
 
         if not self.item_ids:
             raise UserError(
