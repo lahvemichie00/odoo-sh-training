@@ -1162,9 +1162,20 @@ class PurchaseRequest(models.Model):
                     else "rfq"
                 ),
 
+                # Auto approve PO created from approved PR
+                "approval_state": (
+                    "approved"
+                    if is_po
+                    else "draft"
+                ),
+
                 "order_line": order_lines,
             }
         )
+
+        # CONVERT PO DIRECTLY
+        if is_po:
+            order.button_confirm()
 
         return {
             "type": "ir.actions.act_window",
