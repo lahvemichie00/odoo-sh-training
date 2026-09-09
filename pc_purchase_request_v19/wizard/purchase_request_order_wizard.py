@@ -89,7 +89,7 @@ class PurchaseRequestLineMakePurchaseOrder(models.TransientModel):
                 "company_id": company.id,
                 "currency_id": company.currency_id.id,
                 "picking_type_id": picking.id,
-                "group_category_id": lines[:1].group_category_id.id,
+                "group_category_id": lines[:1].purchase_request_id.group_category_id.id,
                 "item_ids": [
                     (
                         0,

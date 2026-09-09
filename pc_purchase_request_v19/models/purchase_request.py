@@ -1045,7 +1045,7 @@ class PurchaseRequest(models.Model):
 
             "context": {
                 "active_ids": selected_lines.ids,
-                "purchase_document_type": "po",
+                "purchase_document_type": "rfq",
             },
         }
 
