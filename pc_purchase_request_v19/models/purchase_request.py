@@ -1082,30 +1082,32 @@ class PurchaseRequest(models.Model):
     # CREATE PURCHASE DOCUMENT
     # ======================================================
 
-    def _create_purchase_document(
-        self,
-        selected_lines,
-    ):
+    def action_create_po(self):
 
         self.ensure_one()
 
-        document_type = self.env.context.get(
-            "purchase_document_type",
-            "rfq"
+        if self.state != "approved":
+            raise UserError(
+                _("Only approved Purchase Requests can create Purchase Order.")
+            )
+
+
+        selected_lines = self.line_ids.filtered(
+            lambda line: line.selected_for_purchase
         )
 
-        is_po = document_type == "po"
 
-
-        # Validate PR lines
-        for line in selected_lines:
-            line._validate_for_order()
+        if not selected_lines:
+            raise UserError(
+                _("Please select item before creating Purchase Order.")
+            )
 
 
         order_lines = []
 
-
         for line in selected_lines:
+
+            line._validate_for_order()
 
             order_lines.append(
                 (
@@ -1121,73 +1123,64 @@ class PurchaseRequest(models.Model):
 
                         "product_qty": line.qty,
 
-                        "product_uom_id": (
-                            line.product_uom_id.id
-                        ),
+                        "product_uom_id":
+                            line.product_uom_id.id,
 
-                        "date_planned": (
-                            fields.Datetime.now()
-                        ),
+                        "date_planned":
+                            fields.Datetime.now(),
 
-                        "purchase_request_line_id": line.id,
+                        "purchase_request_line_id":
+                            line.id,
                     }
                 )
             )
 
 
-        # CREATE REAL RFQ / PO
-        order = self.env["purchase.order"].with_context(
+        po = self.env["purchase.order"].with_context(
             from_purchase_request=True,
             skip_purchase_approval_workflow=True,
         ).create(
             {
                 "origin": self.name,
 
-                "company_id": self.company_id.id,
+                "company_id":
+                    self.company_id.id,
 
-                "group_category_id": self.group_category_id.id,
+                "group_category_id":
+                    self.group_category_id.id,
 
-                # Document history type
-                "purchase_document_type": (
-                    "po"
-                    if is_po
-                    else "rfq"
-                ),
+                "purchase_document_type":
+                    "po",
 
-                # Current approval stage
-                "approval_stage": (
-                    "po"
-                    if is_po
-                    else "rfq"
-                ),
+                "approval_stage":
+                    "po",
 
-                # Auto approve PO created from approved PR
-                "approval_state": (
-                    "approved"
-                    if is_po
-                    else "draft"
-                ),
+                "approval_state":
+                    "draft",
 
-                "order_line": order_lines,
+                "order_line":
+                    order_lines,
             }
         )
 
+
         return {
-            "type": "ir.actions.act_window",
+                "type": "ir.actions.act_window",
 
-            "name": (
-                _("Purchase Order")
-                if is_po
-                else _("Request for Quotation")
-            ),
+                "name":
+                _("Purchase Order"),
 
-            "res_model": "purchase.order",
+            "res_model":
+                "purchase.order",
 
-            "res_id": order.id,
+            "res_id":
+                po.id,
 
-            "view_mode": "form",
+            "view_mode":
+                "form",
 
-            "target": "current",
+            "target":
+                "current",
         }
 
 # ==========================================================
