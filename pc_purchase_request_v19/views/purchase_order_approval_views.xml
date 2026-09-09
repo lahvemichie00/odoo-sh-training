@@ -169,11 +169,11 @@
                         invisible="approval_state != 'waiting_approval' or not approval_can_current_user"/>
 
 
-                <!-- CONFIRM RFQ -->
+                <!-- CREATE PO -->
 
-                <button name="action_confirm_rfq"
+                <button name="action_create_po_from_rfq"
                         type="object"
-                        string="CONFIRM RFQ"
+                        string="CREATE PO"
                         class="oe_highlight"
                         invisible="approval_state != 'approved' or purchase_document_type != 'rfq'"/>
 

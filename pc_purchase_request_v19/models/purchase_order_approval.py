@@ -561,7 +561,7 @@ class PurchaseOrder(models.Model):
 
                 "approval_stage": "po",
 
-                "approval_state": "draft",
+                "approval_state": "approved",
 
                 "company_id": rfq.company_id.id,
 
@@ -589,6 +589,8 @@ class PurchaseOrder(models.Model):
                 ],
             })
 
+            po.button_confirm()
+
             rfq.message_post(
                 body=_(
                     "Purchase Order created: %s"
@@ -611,13 +613,24 @@ class PurchaseOrder(models.Model):
                 "target": "current",
             }
 
+
     # ==========================================================
-    # CONFIRM RFQ BUTTON
+    # CREATE PO FROM APPROVED RFQ
     # ==========================================================
 
-    def action_confirm_rfq(self):
+    def action_create_po_from_rfq(self):
 
         self.ensure_one()
+
+        if self.purchase_document_type != "rfq":
+            raise UserError(
+                _("Only RFQ can create Purchase Order.")
+            )
+
+        if self.approval_state != "approved":
+            raise UserError(
+                _("RFQ must be approved before creating PO.")
+            )
 
         return self.button_confirm()
 

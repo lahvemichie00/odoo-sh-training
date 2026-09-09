@@ -1032,13 +1032,22 @@ class PurchaseRequest(models.Model):
             )
 
 
-        return self.with_context(
-            purchase_document_type="rfq"
-        )._create_purchase_document(
-            selected_lines
-        )
+        return {
+            "type": "ir.actions.act_window",
 
+            "name": _("Create Purchase Order"),
 
+            "res_model": "purchase.request.line.make.purchase.order",
+
+            "view_mode": "form",
+
+            "target": "new",
+
+            "context": {
+                "active_ids": selected_lines.ids,
+                "purchase_document_type": "po",
+            },
+        }
 
     # ======================================================
     # CREATE PURCHASE ORDER
@@ -1047,7 +1056,6 @@ class PurchaseRequest(models.Model):
     def action_create_po(self):
 
         self.ensure_one()
-
 
         if self.state != "approved":
 
@@ -1075,11 +1083,23 @@ class PurchaseRequest(models.Model):
             )
 
 
-        return self.with_context(
-            purchase_document_type="po"
-        )._create_purchase_document(
-            selected_lines
-        )
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("Create Purchase Order"),
+
+            "res_model":
+                "purchase.request.line.make.purchase.order",
+
+            "view_mode": "form",
+
+            "target": "new",
+
+            "context": {
+                "active_ids": selected_lines.ids,
+                "purchase_document_type": "po",
+            },
+        }
 
     # ======================================================
     # CREATE PURCHASE DOCUMENT
