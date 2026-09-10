@@ -1031,52 +1031,71 @@ class PurchaseRequest(models.Model):
                 )
             )
 
+        order_lines = []
 
-        return self.with_context(
-            purchase_document_type="rfq"
-        )._create_purchase_document(
-            selected_lines
-        )
+        for line in selected_lines:
 
-    # ======================================================
-    # CREATE PURCHASE ORDER
-    # ======================================================
+            line._validate_for_order()
 
-    def action_create_po(self):
-
-        self.ensure_one()
-
-        if self.state != "approved":
-
-            raise UserError(
-                _(
-                    "Only approved Purchase Requests "
-                    "can create Purchase Order."
+            order_lines.append(
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": line.product_id.id,
+                        "name": (
+                            line.desc
+                            or line.product_id.display_name
+                        ),
+                        "product_qty": line.qty,
+                        "product_uom_id": line.product_uom_id.id,
+                        "date_planned": fields.Datetime.now(),
+                        "purchase_request_line_id": line.id,
+                    }
                 )
             )
 
 
-        selected_lines = self.line_ids.filtered(
-            lambda line:
-            line.selected_for_purchase
+        rfq = self.env["purchase.order"].with_context(
+            from_purchase_request=True,
+            skip_purchase_approval_workflow=True,
+        ).create(
+            {
+                "origin": self.name,
+
+                "company_id": self.company_id.id,
+
+                "group_category_id":
+                    self.group_category_id.id,
+
+                "purchase_document_type":
+                    "rfq",
+
+                "approval_stage":
+                    "rfq",
+
+                "approval_state":
+                    "draft",
+
+                "order_line":
+                    order_lines,
+            }
         )
 
 
-        if not selected_lines:
+        return {
+            "type": "ir.actions.act_window",
 
-            raise UserError(
-                _(
-                    "Please select item before "
-                    "creating Purchase Order."
-                )
-            )
+            "name": _("Request for Quotation"),
 
+            "res_model": "purchase.order",
 
-        return self.with_context(
-            purchase_document_type="po"
-        )._create_purchase_document(
-            selected_lines
-        )
+            "res_id": rfq.id,
+
+            "view_mode": "form",
+
+            "target": "current",
+        }
 
     # ======================================================
     # CREATE PURCHASE DOCUMENT
