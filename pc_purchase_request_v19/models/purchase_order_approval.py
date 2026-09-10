@@ -493,126 +493,40 @@ class PurchaseOrder(models.Model):
                 self
             ).button_confirm()
 
-        # ==================================================
-        # NORMAL PURCHASE ORDER CONFIRM
-        # ==================================================
 
-        if all(
-            order.purchase_document_type == "po"
-            for order in self
-        ):
+        for order in self:
 
-            for order in self:
-
-                if not order.partner_id:
-
-                    raise UserError(
-                        _("Please select Vendor.")
-                    )
-
-                if order.approval_state != "approved":
-
-                    raise UserError(
-                        _(
-                            "Purchase document must be approved before confirmation."
-                        )
-                    )
-
-            return super(
-                PurchaseOrder,
-                self
-            ).button_confirm()
-
-        # ==================================================
-        # RFQ -> CREATE PO
-        # ==================================================
-
-        for rfq in self:
-
-            if not rfq.partner_id:
+            if order.purchase_document_type != "po":
 
                 raise UserError(
                     _(
-                        "Please select Vendor before confirming RFQ."
+                        "Only Purchase Order can be confirmed."
                     )
                 )
 
-            if rfq.approval_state != "approved":
+
+            if not order.partner_id:
 
                 raise UserError(
                     _(
-                        "Purchase document must be approved before confirmation."
+                        "Please select Vendor."
                     )
                 )
 
 
-            po = self.env["purchase.order"].with_context(
-                from_purchase_request=True,
-                skip_purchase_approval_workflow=True,
-            ).create({
+            if order.approval_state != "approved":
 
-                "partner_id": rfq.partner_id.id,
-
-                "origin": rfq.name,
-
-                "source_rfq_id": rfq.id,
-
-                "purchase_document_type": "po",
-
-                "approval_stage": "po",
-
-                "approval_state": "approved",
-
-                "company_id": rfq.company_id.id,
-
-                "order_line": [
-                    (
-                        0,
-                        0,
-                        {
-                            "product_id": line.product_id.id,
-
-                            "name": line.name,
-
-                            "product_qty": line.product_qty,
-
-                            "product_uom_id": line.product_uom_id.id,
-
-                            "date_planned": line.date_planned,
-
-                            "purchase_request_line_id":
-                                line.purchase_request_line_id.id,
-                        }
+                raise UserError(
+                    _(
+                        "Purchase Order must be approved before confirmation."
                     )
-
-                    for line in rfq.order_line
-                ],
-            })
-
-            po.button_confirm()
-
-            rfq.message_post(
-                body=_(
-                    "Purchase Order created: %s"
                 )
-                % po.name
-            )
 
 
-            return {
-                "type": "ir.actions.act_window",
-
-                "name": _("Purchase Order"),
-
-                "res_model": "purchase.order",
-
-                "res_id": po.id,
-
-                "view_mode": "form",
-
-                "target": "current",
-            }
-
+        return super(
+            PurchaseOrder,
+            self
+        ).button_confirm()
 
     # ==========================================================
     # CREATE PO FROM APPROVED RFQ
@@ -632,7 +546,71 @@ class PurchaseOrder(models.Model):
                 _("RFQ must be approved before creating PO.")
             )
 
-        return self.button_confirm()
+
+        po = self.env["purchase.order"].with_context(
+            from_purchase_request=True,
+            skip_purchase_approval_workflow=True,
+        ).create({
+
+            "partner_id": self.partner_id.id,
+
+            "origin": self.name,
+
+            "source_rfq_id": self.id,
+
+            "purchase_document_type": "po",
+
+            "approval_stage": "po",
+
+            "approval_state": "draft",
+
+            "company_id": self.company_id.id,
+
+            "order_line": [
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": line.product_id.id,
+
+                        "name": line.name,
+
+                        "product_qty": line.product_qty,
+
+                        "product_uom_id": line.product_uom_id.id,
+
+                        "date_planned": line.date_planned,
+
+                        "purchase_request_line_id":
+                            line.purchase_request_line_id.id,
+                    }
+                )
+
+                for line in self.order_line
+            ],
+        })
+
+
+        self.message_post(
+            body=_(
+                "Purchase Order created: %s"
+            ) % po.name
+        )
+
+
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("Purchase Order"),
+
+            "res_model": "purchase.order",
+
+            "res_id": po.id,
+
+            "view_mode": "form",
+
+            "target": "current",
+        }
 
     # ==========================================================
     # OPEN FOC WIZARD
