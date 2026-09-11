@@ -117,7 +117,10 @@
 
             </xpath>
 
-            <xpath expr="//button[@name='button_confirm']" position="attributes">
+            <!-- Custom Confirm Order Button -->
+
+            <xpath expr="//button[@name='button_confirm'][@id='bid_confirm']"
+                   position="attributes">
 
                 <attribute name="invisible">
                     purchase_document_type != 'po' or approval_state != 'approved'
@@ -127,6 +130,14 @@
 
             </xpath>
 
+            <!-- Hide Standard Odoo Draft Confirm Button -->
+
+            <xpath expr="//button[@name='button_confirm'][@id='draft_confirm']"
+                   position="attributes">
+
+                <attribute name="invisible">1</attribute>
+
+            </xpath>
 
             <xpath expr="//button[@name='button_cancel']" position="attributes"
                    optional="show">
@@ -134,7 +145,6 @@
                 <attribute name="invisible">1</attribute>
 
             </xpath>
-
 
             <!-- HIDE LOCK -->
 
