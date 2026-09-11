@@ -139,7 +139,7 @@
                         type="object"
                         string="CONFIRM"
                         class="oe_highlight"
-                        invisible="approval_state != 'draft' or purchase_document_type != 'rfq'"/>
+                        invisible="approval_state != 'draft'"/>
 
                 <button name="action_approve"
                         type="object"
