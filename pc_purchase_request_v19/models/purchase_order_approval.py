@@ -581,7 +581,7 @@ class PurchaseOrder(models.Model):
 
                         "price_unit": line.price_unit,
 
-                        "taxes_id": [
+                        "tax_id": [
                             (6, 0, line.taxes_id.ids)
                         ],
 
