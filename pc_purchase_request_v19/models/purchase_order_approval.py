@@ -476,7 +476,7 @@ class PurchaseOrder(models.Model):
 
         if self.approval_state != "waiting_approval":
             raise UserError(
-                _("Purchase Order is not waiting for approval.")
+                _("Purchase document is not waiting for approval.")
             )
 
         return self._approval_action_approve()
@@ -544,6 +544,16 @@ class PurchaseOrder(models.Model):
         if self.approval_state != "approved":
             raise UserError(
                 _("RFQ must be approved before creating PO.")
+            )
+
+        if not self.partner_id:
+            raise UserError(
+                _("Please select Vendor before creating Purchase Order.")
+            )
+
+        if not self.order_line:
+            raise UserError(
+                _("Cannot create Purchase Order without order lines.")
             )
 
 
