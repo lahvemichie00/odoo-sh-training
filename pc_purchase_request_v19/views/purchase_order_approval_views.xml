@@ -67,32 +67,6 @@
                 </button>
 
 
-                <!-- RECEIPTS -->
-
-                <button name="action_view_picking"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-truck"
-                        invisible="purchase_document_type != 'po' or incoming_picking_count == 0">
-
-                    <field name="incoming_picking_count"
-                           widget="statinfo"
-                           string="Receipts"/>
-                </button>
-
-                <button name="action_view_invoice"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-file-text-o"
-                        invisible="purchase_document_type != 'po' or invoice_count == 0">
-
-                    <field name="invoice_count"
-                           widget="statinfo"
-                           string="Bills"/>
-
-                </button>
-
-
             </xpath>
 
             <!-- ===================================================== -->
@@ -238,7 +212,7 @@
             <!-- PURCHASE ORDER HEADER LABEL                          -->
             <!-- ===================================================== -->
 
-            <xpath expr="//span[contains(@class,'o_form_label') and contains(.,'Request for Quotation')]"
+            <xpath expr="//span[hasclass('o_form_label') and contains(.,'Request for Quotation')]"
                    position="attributes">
 
                 <attribute name="invisible">
@@ -248,7 +222,7 @@
             </xpath>
 
 
-            <xpath expr="//span[contains(@class,'o_form_label') and contains(.,'Purchase Order')]"
+            <xpath expr="//span[hasclass('o_form_label') and contains(.,'Purchase Order')]"
                    position="attributes">
 
                 <attribute name="invisible">
