@@ -7,7 +7,7 @@
 
         <field name="model">purchase.order</field>
 
-        <field name="priority">20</field>
+        <field name="priority">50</field>
 
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
 
@@ -120,7 +120,7 @@
 
             <!-- Custom Confirm Order Button -->
 
-            <xpath expr="//button[@name='button_confirm' and @id='bid_confirm']"
+            <xpath expr="//button[@id='bid_confirm']"
                    position="attributes">
 
                 <attribute name="invisible">
@@ -291,6 +291,29 @@
             </xpath>
 
         </field>
+    </record>
+
+    <record id="hide_standard_purchase_confirm_button" model="ir.ui.view">
+
+        <field name="name">purchase.order.hide.standard.confirm</field>
+
+        <field name="model">purchase.order</field>
+
+        <field name="priority">100</field>
+
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+
+        <field name="arch" type="xml">
+
+            <xpath expr="//button[@id='draft_confirm']"
+                   position="attributes">
+
+                <attribute name="invisible">1</attribute>
+
+            </xpath>
+
+        </field>
+
     </record>
 
 </odoo>
