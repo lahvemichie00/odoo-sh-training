@@ -579,6 +579,12 @@ class PurchaseOrder(models.Model):
 
                         "product_uom_id": line.product_uom_id.id,
 
+                        "price_unit": line.price_unit,
+
+                        "taxes_id": [
+                            (6, 0, line.taxes_id.ids)
+                        ],
+
                         "date_planned": line.date_planned,
 
                         "purchase_request_line_id":
