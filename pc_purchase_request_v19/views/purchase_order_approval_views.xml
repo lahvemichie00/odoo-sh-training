@@ -132,7 +132,7 @@
 
             <!-- Hide Standard Odoo Draft Confirm Button -->
 
-            <xpath expr="//button[@name='button_confirm' and @id='draft_confirm']"
+            <xpath expr="//button[@name='button_confirm' and contains(@invisible, 'state !=')]"
                    position="attributes">
 
                 <attribute name="invisible">1</attribute>
