@@ -305,8 +305,8 @@ class ApprovalMatrixApprover(models.Model):
     )
     user_ids = fields.Many2many(
         "res.users",
-        "approval_matrix_rule_approver_res_users_rel",
-        "approval_matrix_rule_approver_id",
+        "approval_matrix_approver_res_users_rel",
+        "approval_matrix_approver_id",
         "res_users_id",
         string="Users",
         domain=[("share", "=", False)],
