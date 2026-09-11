@@ -235,6 +235,29 @@
             </xpath>
 
             <!-- ===================================================== -->
+            <!-- PURCHASE ORDER HEADER LABEL                          -->
+            <!-- ===================================================== -->
+
+            <xpath expr="//span[contains(@class,'o_form_label') and contains(.,'Request for Quotation')]"
+                   position="attributes">
+
+                <attribute name="invisible">
+                    purchase_document_type != 'rfq'
+                </attribute>
+
+            </xpath>
+
+
+            <xpath expr="//span[contains(@class,'o_form_label') and contains(.,'Purchase Order')]"
+                   position="attributes">
+
+                <attribute name="invisible">
+                    purchase_document_type != 'po'
+                </attribute>
+
+            </xpath>
+
+            <!-- ===================================================== -->
             <!-- TECHNICAL FIELDS                                      -->
             <!-- ===================================================== -->
 
@@ -291,29 +314,6 @@
             </xpath>
 
         </field>
-    </record>
-
-    <record id="hide_standard_purchase_confirm_button" model="ir.ui.view">
-
-        <field name="name">purchase.order.hide.standard.confirm</field>
-
-        <field name="model">purchase.order</field>
-
-        <field name="priority">100</field>
-
-        <field name="inherit_id" ref="purchase.purchase_order_form"/>
-
-        <field name="arch" type="xml">
-
-            <xpath expr="//button[@id='draft_confirm']"
-                   position="attributes">
-
-                <attribute name="invisible">1</attribute>
-
-            </xpath>
-
-        </field>
-
     </record>
 
 </odoo>
