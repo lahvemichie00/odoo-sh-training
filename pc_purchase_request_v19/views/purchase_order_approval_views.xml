@@ -98,7 +98,9 @@
                    position="attributes">
 
                 <attribute name="invisible">
-                    purchase_document_type != 'po' or approval_state != 'approved'
+                    purchase_document_type != 'po'
+                    or approval_state != 'approved'
+                    or state == 'purchase'
                 </attribute>
 
                 <attribute name="string">CONFIRM ORDER</attribute>
