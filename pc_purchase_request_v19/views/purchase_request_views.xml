@@ -80,9 +80,9 @@
 
                 <button name="action_resubmit"
                         type="object"
-                        string="RESUBMIT"
+                        string="Reset to Draft"
                         class="oe_highlight"
-                        invisible="state != 'reject'"/>
+                        invisible="state not in ('reject', 'cancelled')"/>
 
 
 

@@ -167,7 +167,7 @@
                         type="object"
                         string="ADD FOC"
                         class="oe_highlight"
-                        invisible="approval_state != 'approved' or purchase_document_type != 'po'"/>
+                        invisible="state != 'purchase' or purchase_document_type != 'po'"/>
 
             </xpath>
 

@@ -811,12 +811,15 @@ class PurchaseRequest(models.Model):
         for request in self:
 
 
-            if request.state != "reject":
+            if request.state not in (
+                "reject",
+                "cancelled",
+            ):
 
                 raise UserError(
                     _(
-                        "Only rejected Purchase Requests "
-                        "can be resubmitted."
+                        "Only rejected or cancelled "
+                        "Purchase Requests can be reset."
                     )
                 )
 
@@ -825,34 +828,30 @@ class PurchaseRequest(models.Model):
                 skip_request_workflow=True
             ).write(
                 {
-                    "state":
-                    "draft",
+                    "state": "draft",
 
-                    "rejected_by":
-                    False,
+                    # Reject cleanup
+                    "rejected_by": False,
+                    "date_rejected": False,
+                    "reject_message": False,
 
-                    "date_rejected":
-                    False,
+                    # Approval cleanup
+                    "approved_by": False,
+                    "date_approved": False,
+                    "date_approval_department": False,
 
-                    "reject_message":
-                    False,
-
-                    "approved_by":
-                    False,
-
-                    "date_approved":
-                    False,
-
-                    "date_approval_department":
-                    False,
+                    # Cancel cleanup
+                    "cancelled_by": False,
+                    "date_cancelled": False,
+                    "cancellation_reason": False,
                 }
             )
 
 
             request.message_post(
                 body=_(
-                    "Purchase Request resubmitted "
-                    "and returned to Draft."
+                    "Purchase Request reset to draft."
+                    "Ready for resubmission."
                 )
             )
 
