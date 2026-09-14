@@ -1031,84 +1031,102 @@ class PurchaseRequest(models.Model):
                 )
             )
 
+        order_lines = []
 
-        return self.with_context(
-            purchase_document_type="rfq"
-        )._create_purchase_document(
-            selected_lines
+        for line in selected_lines:
+
+            line._validate_for_order()
+
+            order_lines.append(
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": line.product_id.id,
+                        "name": (
+                            line.desc
+                            or line.product_id.display_name
+                        ),
+                        "product_qty": line.qty,
+                        "product_uom_id": line.product_uom_id.id,
+                        "date_planned": fields.Datetime.now(),
+                        "purchase_request_line_id": line.id,
+                    }
+                )
+            )
+
+
+        rfq = self.env["purchase.order"].with_context(
+            from_purchase_request=True,
+            skip_purchase_approval_workflow=True,
+        ).create(
+            {
+                "origin": self.name,
+
+                "company_id": self.company_id.id,
+
+                "group_category_id":
+                    self.group_category_id.id,
+
+                "purchase_document_type":
+                    "rfq",
+
+                "approval_stage":
+                    "rfq",
+
+                "approval_state":
+                    "draft",
+
+                "order_line":
+                    order_lines,
+            }
         )
 
 
+        return {
+            "type": "ir.actions.act_window",
+
+            "name": _("Request for Quotation"),
+
+            "res_model": "purchase.order",
+
+            "res_id": rfq.id,
+
+            "view_mode": "form",
+
+            "target": "current",
+        }
 
     # ======================================================
-    # CREATE PURCHASE ORDER
+    # CREATE PURCHASE DOCUMENT
     # ======================================================
 
     def action_create_po(self):
 
         self.ensure_one()
 
-
         if self.state != "approved":
-
             raise UserError(
-                _(
-                    "Only approved Purchase Requests "
-                    "can create Purchase Order."
-                )
+                _("Only approved Purchase Requests can create Purchase Order.")
             )
 
 
         selected_lines = self.line_ids.filtered(
-            lambda line:
-            line.selected_for_purchase
+            lambda line: line.selected_for_purchase
         )
 
 
         if not selected_lines:
-
             raise UserError(
-                _(
-                    "Please select item before "
-                    "creating Purchase Order."
-                )
+                _("Please select item before creating Purchase Order.")
             )
-
-
-        return self.with_context(
-            purchase_document_type="po"
-        )._create_purchase_document(
-            selected_lines
-        )
-
-    # ======================================================
-    # CREATE PURCHASE DOCUMENT
-    # ======================================================
-
-    def _create_purchase_document(
-        self,
-        selected_lines,
-    ):
-
-        self.ensure_one()
-
-        document_type = self.env.context.get(
-            "purchase_document_type",
-            "rfq"
-        )
-
-        is_po = document_type == "po"
-
-
-        # Validate PR lines
-        for line in selected_lines:
-            line._validate_for_order()
 
 
         order_lines = []
 
-
         for line in selected_lines:
+
+            line._validate_for_order()
 
             order_lines.append(
                 (
@@ -1124,64 +1142,64 @@ class PurchaseRequest(models.Model):
 
                         "product_qty": line.qty,
 
-                        "product_uom_id": (
-                            line.product_uom_id.id
-                        ),
+                        "product_uom_id":
+                            line.product_uom_id.id,
 
-                        "date_planned": (
-                            fields.Datetime.now()
-                        ),
+                        "date_planned":
+                            fields.Datetime.now(),
 
-                        "purchase_request_line_id": line.id,
+                        "purchase_request_line_id":
+                            line.id,
                     }
                 )
             )
 
 
-        # CREATE REAL RFQ / PO
-        order = self.env["purchase.order"].with_context(
+        po = self.env["purchase.order"].with_context(
             from_purchase_request=True,
             skip_purchase_approval_workflow=True,
         ).create(
             {
                 "origin": self.name,
 
-                "company_id": self.company_id.id,
+                "company_id":
+                    self.company_id.id,
 
-                # Document history type
-                "purchase_document_type": (
-                    "po"
-                    if is_po
-                    else "rfq"
-                ),
+                "group_category_id":
+                    self.group_category_id.id,
 
-                # Current approval stage
-                "approval_stage": (
-                    "po"
-                    if is_po
-                    else "rfq"
-                ),
+                "purchase_document_type":
+                    "po",
 
-                "order_line": order_lines,
+                "approval_stage":
+                    "po",
+
+                "approval_state":
+                    "draft",
+
+                "order_line":
+                    order_lines,
             }
         )
 
+
         return {
-            "type": "ir.actions.act_window",
+                "type": "ir.actions.act_window",
 
-            "name": (
-                _("Purchase Order")
-                if is_po
-                else _("Request for Quotation")
-            ),
+                "name":
+                _("Purchase Order"),
 
-            "res_model": "purchase.order",
+            "res_model":
+                "purchase.order",
 
-            "res_id": order.id,
+            "res_id":
+                po.id,
 
-            "view_mode": "form",
+            "view_mode":
+                "form",
 
-            "target": "current",
+            "target":
+                "current",
         }
 
 # ==========================================================

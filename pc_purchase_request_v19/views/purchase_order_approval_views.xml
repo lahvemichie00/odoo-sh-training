@@ -7,8 +7,9 @@
 
         <field name="model">purchase.order</field>
 
-        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="priority">50</field>
 
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
 
         <field name="arch" type="xml">
 
@@ -43,7 +44,7 @@
 
                     <field name="po_count"
                            widget="statinfo"
-                           string="Purchase Orders"/>
+                           string="Purchase"/>
 
                 </button>
 
@@ -66,32 +67,6 @@
                 </button>
 
 
-                <!-- RECEIPTS -->
-
-                <button name="action_view_picking"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-truck"
-                        invisible="purchase_document_type != 'po' or incoming_picking_count == 0">
-
-                    <field name="incoming_picking_count"
-                           widget="statinfo"
-                           string="Receipts"/>
-                </button>
-
-                <button name="action_view_invoice"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-file-text-o"
-                        invisible="purchase_document_type != 'po' or invoice_count == 0">
-
-                    <field name="invoice_count"
-                           widget="statinfo"
-                           string="Bills"/>
-
-                </button>
-
-
             </xpath>
 
             <!-- ===================================================== -->
@@ -104,7 +79,7 @@
 
                 <field name="approval_state"
                        widget="statusbar"
-                       statusbar_visible="draft,waiting_approval,approved,rejected"/>
+                       statusbar_visible="draft,waiting_approval,approved"/>
 
             </xpath>
 
@@ -117,7 +92,10 @@
 
             </xpath>
 
-            <xpath expr="//button[@name='button_confirm']" position="attributes">
+            <!-- Custom Confirm Order Button -->
+
+            <xpath expr="//button[@id='bid_confirm']"
+                   position="attributes">
 
                 <attribute name="invisible">
                     purchase_document_type != 'po' or approval_state != 'approved'
@@ -127,6 +105,14 @@
 
             </xpath>
 
+            <!-- Hide Standard Odoo Draft Confirm Button -->
+
+            <xpath expr="//button[@id='draft_confirm']"
+                   position="attributes">
+
+                <attribute name="invisible">1</attribute>
+
+            </xpath>
 
             <xpath expr="//button[@name='button_cancel']" position="attributes"
                    optional="show">
@@ -134,7 +120,6 @@
                 <attribute name="invisible">1</attribute>
 
             </xpath>
-
 
             <!-- HIDE LOCK -->
 
@@ -152,7 +137,7 @@
 
                 <button name="action_submit_for_approval"
                         type="object"
-                        string="SUBMIT FOR APPROVAL"
+                        string="CONFIRM"
                         class="oe_highlight"
                         invisible="approval_state != 'draft'"/>
 
@@ -169,11 +154,11 @@
                         invisible="approval_state != 'waiting_approval' or not approval_can_current_user"/>
 
 
-                <!-- CONFIRM RFQ -->
+                <!-- CREATE PO -->
 
-                <button name="action_confirm_rfq"
+                <button name="action_create_po_from_rfq"
                         type="object"
-                        string="CONFIRM RFQ"
+                        string="CREATE PO"
                         class="oe_highlight"
                         invisible="approval_state != 'approved' or purchase_document_type != 'rfq'"/>
 
@@ -205,6 +190,9 @@
                             <field name="approval_stage"
                                    string="Approval Stage"
                                    readonly="1"/>
+                            
+                            <field name="group_category_id"
+                                   readonly="1"/>
 
                         </group>
 
@@ -217,6 +205,29 @@
                         </group>
                     </group>
                 </page>
+
+            </xpath>
+
+            <!-- ===================================================== -->
+            <!-- PURCHASE ORDER HEADER LABEL                          -->
+            <!-- ===================================================== -->
+
+            <xpath expr="//span[hasclass('o_form_label') and contains(.,'Request for Quotation')]"
+                   position="attributes">
+
+                <attribute name="invisible">
+                    purchase_document_type != 'rfq'
+                </attribute>
+
+            </xpath>
+
+
+            <xpath expr="//span[hasclass('o_form_label') and contains(.,'Purchase Order')]"
+                   position="attributes">
+
+                <attribute name="invisible">
+                    purchase_document_type != 'po'
+                </attribute>
 
             </xpath>
 

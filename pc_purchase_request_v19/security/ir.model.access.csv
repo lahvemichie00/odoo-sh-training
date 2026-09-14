@@ -6,3 +6,4 @@ access_product_group_category_manager,product.group.category manager,model_produ
 access_pr_order_wizard,purchase request order wizard,model_purchase_request_line_make_purchase_order,purchase.group_purchase_user,1,1,1,1
 access_pr_order_wizard_item,purchase request order wizard item,model_purchase_request_line_make_purchase_order_item,purchase.group_purchase_user,1,1,1,1
 access_purchase_request_cancel_wizard_user,purchase.request.cancel.wizard user,model_purchase_request_cancel_wizard,purchase.group_purchase_user,1,1,1,0
+access_purchase_order_foc_wizard,purchase.order.foc.wizard,model_purchase_order_foc_wizard,base.group_user,1,1,1,0
