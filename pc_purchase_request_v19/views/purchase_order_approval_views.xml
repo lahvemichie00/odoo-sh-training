@@ -97,13 +97,7 @@
             <xpath expr="//button[@id='bid_confirm']"
                    position="attributes">
 
-                <attribute name="invisible">
-                    purchase_document_type != 'po'
-                    or approval_state != 'approved'
-                    or state == 'purchase'
-                </attribute>
-
-                <attribute name="string">CONFIRM ORDER</attribute>
+                <attribute name="invisible">1</attribute>
 
             </xpath>
 
@@ -128,7 +122,16 @@
             <xpath expr="//button[@name='button_lock']" position="attributes"
                    optional="show">
 
-                <attribute name="invisible">approval_state != 'approved'</attribute>
+                <attribute name="invisible">1</attribute>
+
+            </xpath>
+
+            <!-- HIDE UNLOCK -->
+
+            <xpath expr="//button[@name='button_unlock']" position="attributes"
+                   optional="show">
+
+                <attribute name="invisible">1</attribute>
 
             </xpath>
 
@@ -141,7 +144,7 @@
                         type="object"
                         string="CONFIRM"
                         class="oe_highlight"
-                        invisible="approval_state != 'draft'"/>
+                        invisible="approval_state != 'draft' or purchase_document_type not in ('rfq','po')"/>
 
                 <button name="action_approve"
                         type="object"
@@ -163,6 +166,12 @@
                         string="CREATE PO"
                         class="oe_highlight"
                         invisible="approval_state != 'approved' or purchase_document_type != 'rfq'"/>
+
+                <button name="button_confirm"
+                        type="object"
+                        string="CONFIRM ORDER"
+                        class="oe_highlight"
+                        invisible="purchase_document_type != 'po' or approval_state != 'approved' or state == 'purchase'"/>
 
 
                 <button name="action_add_foc_line"
