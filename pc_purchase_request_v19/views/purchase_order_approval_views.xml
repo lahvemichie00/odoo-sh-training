@@ -173,13 +173,6 @@
                         class="oe_highlight"
                         invisible="purchase_document_type != 'po' or approval_state != 'approved' or state == 'purchase'"/>
 
-
-                <button name="action_add_foc_line"
-                        type="object"
-                        string="ADD FOC"
-                        class="oe_highlight"
-                        invisible="state != 'purchase' or purchase_document_type != 'po'"/>
-
             </xpath>
 
             <!-- ===================================================== -->
@@ -239,6 +232,20 @@
                 <attribute name="invisible">
                     purchase_document_type != 'po'
                 </attribute>
+
+            </xpath>
+
+            <!-- ===================================================== -->
+            <!-- ADD FOC BUTTON UNDER VENDOR REFERENCE -->
+            <!-- ===================================================== -->
+            
+            <xpath expr="//field[@name='partner_ref']" position="after">
+
+                <button name="action_add_foc_line"
+                        type="object"
+                        string="ADD FOC"
+                        class="oe_highlight"
+                        invisible="state != 'purchase' or purchase_document_type != 'po'"/>
 
             </xpath>
 
